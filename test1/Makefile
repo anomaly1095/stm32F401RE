@@ -12,6 +12,7 @@ ELF = firmware.elf
 
 firmware.elf: $(OBJS)
 	$(LD) $(LD_FLAGS) -o $@ $(OBJS)
+	clear
 
 %.o: %.s
 	$(AS) $(ASM_FLAGS) -o $@ $<
