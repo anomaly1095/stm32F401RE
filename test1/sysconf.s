@@ -1,7 +1,3 @@
-.equ RCC_CR, 0x40023800
-.equ RCC_PLLCFGR, 0x40023804
-.equ RCC_CFGR, 0x40023808
-
   .section .text.reset_handler, "ax", %progbits
   .global sys_init
 
@@ -65,3 +61,48 @@ pll_sysclk_wait:
 
   // return
   BX lr
+
+  .section .text.periph_config, "ax", %progbits
+  .global gpioA_config
+
+gpioA_config:
+  // setting the AHB prescaler
+  LDR r0, =RCC_CFGR
+  LDR r1, [r0]
+  MOV r2, #0b1000 // HCLK = SYSCLK/2
+  LSL r2, r2, #4
+  ORR r1, r1, r2
+  STR r1, [r0]
+
+  // enabling GPIOA clock
+  LDR r0, =RCC_AHB1ENR
+  LDR r1, [r0]
+  MOV r2, #0b1
+  ORR r1, r1, r2 // enable GPIO PORTA clock
+  STR r1, [r0]
+
+  // configuring GPIOA MODER (Mode Register)
+  LDR r0, =GPIOA // MODER address
+  LDR r1, [r0]
+  MOV r2, #0b10 // Set pin PA5 as output (binary 10)
+  LSL r2, r2, #10 // Shift to PA5 position (LED)
+  ORR r1, r1, r2
+  STR r1, [r0]
+
+  // configuring GPIOA OSPEEDR (Output Speed Register)
+  ADD r0, r0, #8 // OSPEEDR address
+  LDR r1, [r0]
+  MOV r2, #0b10 // Set pin PA5 to high speed (binary 10)
+  LSL r2, r2, #10 // Shift to PA5 position (LED)
+  ORR r1, r1, r2
+  STR r1, [r0]
+
+  BX lr // Return from subroutine
+
+  .section .rodata, "a", %progbits
+
+.equ RCC_CR, 0x40023800 // RCC main register
+.equ RCC_PLLCFGR, 0x40023804 // pll prescalers
+.equ RCC_CFGR, 0x40023808 // other prescalers
+.equ RCC_AHB1ENR, 0x40023830 // enable AHB peripherals
+.equ GPIOA, 0x40020000    // gpio address base address (also AHB base address)

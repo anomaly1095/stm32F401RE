@@ -26,8 +26,7 @@
     
   .syntax unified
   .cpu cortex-m4
-  //.fpu softvfp   // SOFTWARE FLOATING POINT UNIT
-  .fpu fpv4-sp-d16 // HARDWARE FLOATING POINT UNIT
+  .fpu softvfp
   .thumb
 
 .global  g_pfnVectors

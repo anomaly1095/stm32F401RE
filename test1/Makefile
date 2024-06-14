@@ -1,29 +1,21 @@
-CC= arm-none-eabi-gcc
-AS= arm-none-eabi-as
-LD= arm-none-eabi-ld
-ASM_FLAGS= -mcpu=cortex-m4 -mthumb 
-LD_FLAGS= --script linker-script.ld -e reset_handler
+CC=arm-none-eabi-gcc
+AS=arm-none-eabi-as
+LD=arm-none-eabi-ld
+DBG_FLAGS=-g -Wall
+ASM_FLAGS=-mcpu=cortex-m4 -mthumb $(DBG_FLAGS)
+LD_FLAGS=--script linker-script.ld -e reset_handler
 
-SRC_FILES := $(wildcard *.c)
-ASM_FILES := $(wildcard *.s)
-OBJ_FILES := $(SRC_FILES:.c=.o) $(ASM_FILES:.s=.o)
+firmware.elf: firmware.o startup.o sysconf.o
+	$(LD) $(LD_FLAGS) -o $@ firmware.o startup.o sysconf.o
 
-TARGET = output.elf
+startup.o: startup.s
+	$(AS) $(ASM_FLAGS) -o $@ $< 
 
-all: $(TARGET)
+sysconf.o: sysconf.s
+	$(AS) $(ASM_FLAGS) -o $@ $< 
 
-$(TARGET): $(OBJ_FILES)
-    $(LD) $(LD_FLAGS) -o $@ $^
-
-%.o: %.c
-    $(CC) $(ASM_FLAGS) -c $< -o $@
-
-%.o: %.s
-    $(AS) $(ASM_FLAGS) $< -o $@
-
-assemble: $(OBJ_FILES)
+firmware.o: firmware.s
+	$(AS) $(ASM_FLAGS) -o $@ $< 
 
 clean:
-    rm -rf *.o *.elf *.map
-
-.PHONY: all assemble clean
+	rm -f *.o *.elf

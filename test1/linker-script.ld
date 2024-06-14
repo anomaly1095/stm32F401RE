@@ -8,7 +8,7 @@ OUTPUT_ARCH(arm)
 MEMORY
 {
   FLASH(rx) : ORIGIN = 0x08000000, LENGTH = 512K
-  RAM(rwx)  : ORIGIN = 0x20000000, LENGTH = 96K
+  RAM(rwx)  : ORIGIN = 0x20000000, LENGTH = 96K  /*probably change to RAM(rw)*/
 }
 
 ENTRY(reset_handler)
@@ -32,6 +32,8 @@ SECTIONS
     *(.text)
     *(.text.reset_handler)
     *(.text.default_handler)
+    *(.text.periph_config)
+    *(.text.firmware)
     *(.glue_7)         /* glue arm to thumb code */
     *(.glue_7t)        /* glue thumb to arm code */
     *(.eh_frame)
@@ -61,6 +63,7 @@ SECTIONS
     . = ALIGN(4);
     _sdata = .;
     *(.data)
+    *(.data*)
     . = ALIGN(4);
     _edata = .;
   } > RAM AT > FLASH

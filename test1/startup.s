@@ -1,12 +1,14 @@
-.syntax unified
-.cpu cortex-m4
-.fpu fpv4-sp-d16 // HARDWARE FLOATING POINT UNIT
-.thumb
+  .syntax unified
+  .cpu cortex-m4
+  .fpu fpv4-sp-d16 // HARDWARE FLOATING POINT UNIT
+  .thumb
 
-.extern _start // firmware entry point
-.extern sys_init // system inits function 
-.global g_pfnVectors // vector table
-.global default_handler // default interrupt handler
+  .extern _start // firmware entry point
+  .extern sys_init // system inits function 
+  .global g_pfnVectors // vector table
+  .global default_handler // default interrupt handler
+
+  .section .rodata, "a", %progbits
 
 .word _sidata // start address in FLASH of .data
 .word _sdata  // start address in RAM of .data
@@ -14,12 +16,12 @@
 .word _sbss   // start address of .bss in RAM
 .word _ebss   // end address of .bss in RAM
 
-/**
-*  reset handler (entry point)
-*/
-.section .text.reset_handler, "ax", %progbits
-.global reset_handler
-.type reset_handler, %function
+  /**
+  *  reset handler (entry point)
+  */
+  .section .text.reset_handler, "ax", %progbits
+  .global reset_handler
+  .type reset_handler, %function
 
 reset_handler:
   LDR sp, =_estack
@@ -57,10 +59,10 @@ main_program:
 
 .size reset_handler, .-reset_handler
 
-/**
-*   default reset handler
-*/
-.section .text.default_handler, "ax", %progbits
+  /**
+  *   default reset handler
+  */
+  .section .text.default_handler, "ax", %progbits
 
 default_handler:
   B default_handler
