@@ -1,21 +1,23 @@
 CC=arm-none-eabi-gcc
 AS=arm-none-eabi-as
 LD=arm-none-eabi-ld
+OBJDUMP=arm-none-eabi-objdump
 DBG_FLAGS=-g -Wall
 ASM_FLAGS=-mcpu=cortex-m4 -mthumb $(DBG_FLAGS)
 LD_FLAGS=--script linker-script.ld -e reset_handler
 
-firmware.elf: firmware.o startup.o sysconf.o
-	$(LD) $(LD_FLAGS) -o $@ firmware.o startup.o sysconf.o
+SRCS = firmware.s startup.s sysconf.s
+OBJS = $(SRCS:.s=.o)
+ELF = firmware.elf
 
-startup.o: startup.s
-	$(AS) $(ASM_FLAGS) -o $@ $< 
+firmware.elf: $(OBJS)
+	$(LD) $(LD_FLAGS) -o $@ $(OBJS)
 
-sysconf.o: sysconf.s
-	$(AS) $(ASM_FLAGS) -o $@ $< 
+%.o: %.s
+	$(AS) $(ASM_FLAGS) -o $@ $<
 
-firmware.o: firmware.s
-	$(AS) $(ASM_FLAGS) -o $@ $< 
+dump: firmware.elf
+	$(OBJDUMP) -h $< > firmware.map
 
 clean:
-	rm -f *.o *.elf
+	rm -f *.o *.elf *.map
