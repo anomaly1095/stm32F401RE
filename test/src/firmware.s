@@ -6,19 +6,21 @@
 
 _start:
   BL  gpioA_config
-  LDR r2, =DELAY
+  LDR r4, =DELAY
+  MOV r2, #(0b1 << 5)
+  LDR r0, =GPIOA_ODR
 
 _led_high:
-  LDR r0, =GPIOA_BSRR
-  MOV r1, #(0b1 << 5)
+  LDR r1, [r0]
+  ORR r1, r1, r2 
   STR r1, [r0]
   MOV r3, #0
   BL  delay
+
 _led_low:
-  LDR r0, =GPIOA_BSRR       // Load the address of GPIOA_BSRR
-  MOV r1, #0b1
-  LSL r1, r1, #21
-  STR r1, [r0]              // Write the value to GPIOA_BSRR, resetting pin 5 low
+  LDR r1, [r0]
+  BIC r1, r1, r2 
+  STR r1, [r0]
   MOV r3, #0
   BL  delay
   B   _led_high
@@ -26,7 +28,7 @@ _led_low:
   BX  lr // go to default handler
 
 delay:
-  CMP r3, r2         // Compare counter with delay value
+  CMP r3, r4         // Compare counter with delay value
   SUB r3, r3, #1     // Decrement counter
   BNE delay          // Loop back if not equal (branch not equal)
   BX lr              // Return if equal
@@ -35,4 +37,10 @@ delay:
   .section .rodata, "a", %progbits
 
 .equ GPIOA_BSRR, 0x40020018
-.equ DELAY, 28000000 // 1 second at 84mhz
+.equ GPIOA_ODR, 0x40020014
+
+// 1 second at 84mhz (each loop iteration consumes a minimum of 4 cpu clock cycles) --> 4min..6max
+// CMP and SUB are in 1 cycle each while CMP<cc> depends on the number of cycles required for a pipeline refill. This ranges from 1 to 3
+// depending on the alignment and width of the target instruction, and whether the
+// processor manages to speculate the address early
+.equ DELAY, 20000000 
