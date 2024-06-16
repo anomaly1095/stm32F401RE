@@ -24,7 +24,7 @@ _led_low:
   MOV r3, #0
   BL  delay
   B   _led_high
-
+  
   BX  lr // go to default handler
 
 delay:
