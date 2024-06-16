@@ -2,7 +2,7 @@
 .extern gpioA_config
 
   .section .text.firmware, "ax", %progbits
-    .type _start %function
+  .type _start, %function
 
 _start:
   BL  gpioA_config
@@ -44,3 +44,4 @@ delay:
 // depending on the alignment and width of the target instruction, and whether the
 // processor manages to speculate the address early
 .equ DELAY, 20000000 
+  .align 4

@@ -72,7 +72,7 @@ pll_sysclk_wait:
 
   // return
   BX    lr
-
+  .align 4
   .section .text.periph_config, "ax", %progbits
   .global gpioA_config
 
@@ -109,7 +109,7 @@ gpioA_config:
   STR   r1, [r0]
 
   BX lr // Return from subroutine
-
+  .align 4
   .section .rodata, "a", %progbits
 
 .equ RCC_CR, 0x40023800 // RCC main register

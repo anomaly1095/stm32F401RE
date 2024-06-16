@@ -8,66 +8,6 @@
   .global g_pfnVectors // vector table
   .global default_handler // default interrupt handler
 
-  .section .rodata, "a", %progbits
-
-.word _sidata // start address in FLASH of .data
-.word _sdata  // start address in RAM of .data
-.word _edata  // end address in RAM of .data
-.word _sbss   // start address of .bss in RAM
-.word _ebss   // end address of .bss in RAM
-
-  /**
-  *  reset handler (entry point)
-  */
-  .section .text.reset_handler, "ax", %progbits
-  .global reset_handler
-  .type reset_handler, %function
-
-reset_handler:
-  LDR sp, =_estack
-
-  // SYSTEM INIT
-  BL sys_init
-  
-  // Initialize .data section
-  LDR r0, =_sidata
-  LDR r1, =_sdata
-  LDR r2, =_edata
-
-copy_data: // copy .data section from flash to RAM
-  CMP r1, r2
-  BEQ zero_bss
-  LDR r3, [r0], #4
-  STR r3, [r1], #4
-  B copy_data
-
-zero_bss: // zero out .bss section
-  LDR r3, =_sbss
-  LDR r4, =_ebss
-  MOV r5, #0x0
-
-zero_bss_loop:
-  CMP r3, r4
-  BEQ main_program
-  STR r5, [r3], #4
-  ADD r3, r3, #4
-  B zero_bss_loop
-
-main_program:
-  // Jump to main firmware entry point
-  BL _start
-
-.size reset_handler, .-reset_handler
-
-  /**
-  *   default reset handler
-  */
-  .section .text.default_handler, "ax", %progbits
-
-default_handler:
-  B default_handler
-
-.size default_handler, .-default_handler
 
 
 /**
@@ -381,3 +321,67 @@ g_pfnVectors:
 
   .weak      SPI4_IRQHandler                  
   .thumb_set SPI4_IRQHandler,default_handler 
+
+/**
+  *   default reset handler
+  */
+  .section .text.default_handler, "ax", %progbits
+
+default_handler:
+  B default_handler
+
+.size default_handler, .-default_handler
+
+  /**
+  *  reset handler (entry point)
+  */
+  .section .text.reset_handler, "ax", %progbits
+  .global reset_handler
+  .type reset_handler, %function
+
+reset_handler:
+  LDR sp, =_estack
+
+  // SYSTEM INIT
+  BL sys_init
+  
+  // Initialize .data section
+  LDR r0, =_sidata
+  LDR r1, =_sdata
+  LDR r2, =_edata
+
+copy_data: // copy .data section from flash to RAM
+  CMP r1, r2
+  BEQ zero_bss
+  LDR r3, [r0], #4
+  STR r3, [r1], #4
+  B copy_data
+
+zero_bss: // zero out .bss section
+  LDR r3, =_sbss
+  LDR r4, =_ebss
+  MOV r5, #0x0
+
+zero_bss_loop:
+  CMP r3, r4
+  BEQ main_program
+  STR r5, [r3], #4
+  ADD r3, r3, #4
+  B zero_bss_loop
+
+main_program:
+  // Jump to main firmware entry point
+  BL _start
+  .align 4
+.size reset_handler, .-reset_handler
+
+
+
+.section .rodata, "a", %progbits
+
+.word _sidata // start address in FLASH of .data
+.word _sdata  // start address in RAM of .data
+.word _edata  // end address in RAM of .data
+.word _sbss   // start address of .bss in RAM
+.word _ebss   // end address of .bss in RAM
+

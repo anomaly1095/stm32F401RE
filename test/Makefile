@@ -30,10 +30,12 @@ $(BIN):
 dump: $(ELF)
 	$(OBJDUMP) -h $< > $(MAP)
 
+flash:
+	openocd -f openocd.cfg -c "program $(ELF) verify test exit"
 $(BIN_FILE): $(ELF)
 	$(OBJCOPY) -O binary $< $@
 
 clean:
 	rm -f $(OBJS) $(ELF) $(MAP) $(BIN_FILE)
 
-.PHONY: all dump clean
+.PHONY: all dump clean flash

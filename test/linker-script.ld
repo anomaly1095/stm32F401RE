@@ -30,8 +30,8 @@ SECTIONS
   {
     . = ALIGN(4);
     *(.text)
-    *(.text.reset_handler)
     *(.text.default_handler)
+    *(.text.reset_handler)
     *(.text.periph_config)
     *(.text.firmware)
     *(.glue_7)         /* glue arm to thumb code */
