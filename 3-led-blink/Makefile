@@ -14,8 +14,8 @@ BIN = bin
 DOC = docs
 
 # Source files and objects
-SRCS = $(wildcard $(SRC)/*.s)
-OBJS = $(patsubst $(SRC)/%.s,$(BIN)/%.o,$(SRCS))
+SRCS = $(wildcard $(SRC)/*.asm)
+OBJS = $(patsubst $(SRC)/%.asm,$(BIN)/%.o,$(SRCS))
 ELF = $(BIN)/firmware.elf
 MAP1 = $(DOC)/firmware1.map
 MAP2 = $(DOC)/firmware2.map
@@ -29,7 +29,7 @@ $(ELF): $(OBJS) | $(BIN)
 	$(LD) $(LD_FLAGS) -o $@ $^
 
 # Assembly compilation step
-$(BIN)/%.o: $(SRC)/%.s | $(BIN)
+$(BIN)/%.o: $(SRC)/%.asm | $(BIN)
 	$(AS) $(ASM_FLAGS) -o $@ $<
 
 # Create output directory if it doesn't exist
