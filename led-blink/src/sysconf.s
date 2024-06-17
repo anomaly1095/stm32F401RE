@@ -16,7 +16,7 @@ hsi_wait:
   LDR   r3, [r0]
   MOV   r4, #0b10
   TST   r3, r4                 // Check if bit 1 (HSIRDY) is set
-  BNE   hsi_wait               // If set, wait for HSI to stabilize
+  BEQ   hsi_wait               // If set, wait for HSI to stabilize
 
 pll_conf:
 
@@ -56,7 +56,7 @@ pll_wait:                    // check PLL phase is locked and sync
   MOV   r4, #1
   LSL   r4, r4, #25
   TST   r3, r4         // check if PLL is locked (PLLRDY = 1)
-  BNE   pll_wait  
+  BEQ   pll_wait  
 
 pll_sysclk:
   LDR   r3, [r2]
@@ -68,7 +68,7 @@ pll_sysclk_wait:
   LDR   r3, [r2]
   MOV   r4, #0b100
   TST   r3, r4
-  BNE   pll_sysclk_wait
+  BEQ   pll_sysclk_wait
 
   // return
   BX    lr

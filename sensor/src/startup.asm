@@ -9,7 +9,9 @@
   .global reset_handler
   .global default_handler
   .extern _sysconf
+  .extern _periphconf
 
+@-------------------------------------------
 
 // system interrupt vector table for stm32F401xx
   .section .isr_vectors, "a", %progbits
@@ -360,17 +362,9 @@ zero_bss:
   B     zero_bss
 
 sysinit:
-  @ reset register values
-  MOV   r0, #0
-  MOV   r1, #0
-  MOV   r2, #0
-  MOV   r4, #0
-  MOV   r5, #0
-  @ goto system clock configurations
-  BL    _sysconf
-
-  BL    _start
-  
+  BL    _sysconf    @ HSI PLL SYSCLK config
+  BL    _periphconf @ peripheral setup
+  BL    _start      @ start program
   B     default_handler
   
   .size reset_handler, .-reset_handler
