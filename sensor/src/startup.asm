@@ -365,7 +365,7 @@ sysinit:
   BL    _sysconf    @ HSI PLL SYSCLK config
   BL    _periphconf @ peripheral setup
   BL    _start      @ start program
-  B     default_handler
+  B     default_handler @ handle return for debug
   
   .size reset_handler, .-reset_handler
   

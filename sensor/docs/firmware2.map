@@ -1,0 +1,235 @@
+
+There are no discarded input sections
+
+Memory Configuration
+
+Name             Origin             Length             Attributes
+FLASH            0x08000000         0x00080000         xr
+RAM              0x20000000         0x00018000         rw
+*default*        0x00000000         0xffffffff
+
+Linker script and memory map
+
+                0x20018000                        _estack = (ORIGIN (RAM) + LENGTH (RAM))
+                0x00000200                        min_heap_size = 0x200
+                0x00000400                        min_stack_size = 0x400
+
+.isr_vector     0x08000000        0x0
+                0x08000000                        . = ALIGN (0x4)
+ *(.isr_vector)
+                0x08000000                        . = ALIGN (0x4)
+
+.text           0x08000000      0x17c
+                0x08000000                        . = ALIGN (0x4)
+ *(.text.default_handler)
+ .text.default_handler
+                0x08000000        0x4 bin/startup.o
+                0x08000000                RTC_Alarm_IRQHandler
+                0x08000000                EXTI2_IRQHandler
+                0x08000000                DebugMon_Handler
+                0x08000000                SPI4_IRQHandler
+                0x08000000                TIM1_CC_IRQHandler
+                0x08000000                DMA2_Stream5_IRQHandler
+                0x08000000                HardFault_Handler
+                0x08000000                DMA1_Stream5_IRQHandler
+                0x08000000                SysTick_Handler
+                0x08000000                PVD_IRQHandler
+                0x08000000                SDIO_IRQHandler
+                0x08000000                TAMP_STAMP_IRQHandler
+                0x08000000                PendSV_Handler
+                0x08000000                NMI_Handler
+                0x08000000                EXTI3_IRQHandler
+                0x08000000                TIM1_UP_TIM10_IRQHandler
+                0x08000000                I2C3_ER_IRQHandler
+                0x08000000                EXTI0_IRQHandler
+                0x08000000                I2C2_EV_IRQHandler
+                0x08000000                DMA1_Stream2_IRQHandler
+                0x08000000                FPU_IRQHandler
+                0x08000000                UsageFault_Handler
+                0x08000000                DMA2_Stream2_IRQHandler
+                0x08000000                SPI1_IRQHandler
+                0x08000000                TIM1_BRK_TIM9_IRQHandler
+                0x08000000                DMA2_Stream3_IRQHandler
+                0x08000000                default_handler
+                0x08000000                USART6_IRQHandler
+                0x08000000                DMA2_Stream0_IRQHandler
+                0x08000000                TIM4_IRQHandler
+                0x08000000                I2C1_EV_IRQHandler
+                0x08000000                DMA1_Stream6_IRQHandler
+                0x08000000                DMA1_Stream1_IRQHandler
+                0x08000000                TIM3_IRQHandler
+                0x08000000                RCC_IRQHandler
+                0x08000000                EXTI15_10_IRQHandler
+                0x08000000                ADC_IRQHandler
+                0x08000000                DMA1_Stream7_IRQHandler
+                0x08000000                TIM5_IRQHandler
+                0x08000000                DMA2_Stream7_IRQHandler
+                0x08000000                I2C3_EV_IRQHandler
+                0x08000000                EXTI9_5_IRQHandler
+                0x08000000                RTC_WKUP_IRQHandler
+                0x08000000                SPI2_IRQHandler
+                0x08000000                MemManage_Handler
+                0x08000000                DMA1_Stream0_IRQHandler
+                0x08000000                SVC_Handler
+                0x08000000                EXTI4_IRQHandler
+                0x08000000                WWDG_IRQHandler
+                0x08000000                TIM2_IRQHandler
+                0x08000000                OTG_FS_WKUP_IRQHandler
+                0x08000000                TIM1_TRG_COM_TIM11_IRQHandler
+                0x08000000                EXTI1_IRQHandler
+                0x08000000                USART2_IRQHandler
+                0x08000000                I2C2_ER_IRQHandler
+                0x08000000                DMA2_Stream1_IRQHandler
+                0x08000000                FLASH_IRQHandler
+                0x08000000                DMA2_Stream4_IRQHandler
+                0x08000000                BusFault_Handler
+                0x08000000                USART1_IRQHandler
+                0x08000000                OTG_FS_IRQHandler
+                0x08000000                SPI3_IRQHandler
+                0x08000000                DMA1_Stream4_IRQHandler
+                0x08000000                I2C1_ER_IRQHandler
+                0x08000000                DMA2_Stream6_IRQHandler
+                0x08000000                DMA1_Stream3_IRQHandler
+ *(.text.reset_handler)
+ .text.reset_handler
+                0x08000004       0x54 bin/startup.o
+                0x08000004                reset_handler
+ *(.text.sys_conf)
+ .text.sys_conf
+                0x08000058       0xb8 bin/sysconf.o
+                0x08000058                _sysconf
+ *(.text.periphconf)
+ .text.periphconf
+                0x08000110       0x3c bin/sysconf.o
+                0x08000110                _periphconf
+ *(.text.firmware)
+ .text.firmware
+                0x0800014c       0x30 bin/main.o
+                0x0800014c                _start
+ *(.glue_7)
+ .glue_7        0x0800017c        0x0 linker stubs
+ *(.glue_7t)
+ .glue_7t       0x0800017c        0x0 linker stubs
+ *(.eh_frame)
+                0x0800017c                        . = ALIGN (0x4)
+ .text          0x0800017c        0x0 bin/main.o
+ .text          0x0800017c        0x0 bin/startup.o
+ .text          0x0800017c        0x0 bin/sysconf.o
+
+.vfp11_veneer   0x0800017c        0x0
+ .vfp11_veneer  0x0800017c        0x0 linker stubs
+
+.v4_bx          0x0800017c        0x0
+ .v4_bx         0x0800017c        0x0 linker stubs
+
+.iplt           0x0800017c        0x0
+ .iplt          0x0800017c        0x0 bin/main.o
+
+.rodata         0x0800017c       0x18
+                0x0800017c                        . = ALIGN (0x4)
+ *(.rodata)
+ .rodata        0x0800017c       0x18 bin/startup.o
+ .rodata        0x08000194        0x0 bin/sysconf.o
+                0x08000194                        . = ALIGN (0x4)
+
+.isr_vectors    0x08000194      0x194
+ .isr_vectors   0x08000194      0x194 bin/startup.o
+
+.rel.dyn        0x08000328        0x0
+ .rel.iplt      0x08000328        0x0 bin/main.o
+
+.ARM            0x08000328        0x0
+                0x08000328                        . = ALIGN (0x4)
+                0x08000328                        __exidx_start = .
+ *(.ARM.exidx*)
+                0x08000328                        __exidx_end = .
+                0x08000328                        . = ALIGN (0x4)
+                0x08000328                        _sidata = LOADADDR (.data)
+
+.data           0x20000000        0x0 load address 0x08000328
+                0x20000000                        . = ALIGN (0x4)
+                0x20000000                        _sdata = .
+ *(.data)
+ .data          0x20000000        0x0 bin/main.o
+ .data          0x20000000        0x0 bin/startup.o
+ .data          0x20000000        0x0 bin/sysconf.o
+ *(.data*)
+                0x20000000                        . = ALIGN (0x4)
+                0x20000000                        _edata = .
+
+.igot.plt       0x20000000        0x0 load address 0x08000328
+ .igot.plt      0x20000000        0x0 bin/main.o
+
+.bss            0x20000000        0x0 load address 0x08000328
+                0x20000000                        . = ALIGN (0x4)
+                0x20000000                        _sbss = .
+ *(.bss*)
+ .bss           0x20000000        0x0 bin/main.o
+ .bss           0x20000000        0x0 bin/startup.o
+ .bss           0x20000000        0x0 bin/sysconf.o
+ *(COMMON)
+                0x20000000                        . = ALIGN (0x4)
+                0x20000000                        _ebss = .
+
+.user_heap      0x20000000      0x200 load address 0x08000328
+                0x20000000                        . = ALIGN (0x8)
+                [!provide]                        PROVIDE (end = .)
+                [!provide]                        PROVIDE (_end = .)
+                0x20000200                        . = (. + min_heap_size)
+ *fill*         0x20000000      0x200 
+                0x20000200                        . = ALIGN (0x8)
+
+.user_stack     0x20000200      0x400 load address 0x08000328
+                0x20000200                        . = ALIGN (0x8)
+                0x20000600                        . = (. + min_stack_size)
+ *fill*         0x20000200      0x400 
+                0x20000600                        . = ALIGN (0x8)
+                0x00000001                        ASSERT ((_estack >= (((_edata + (_ebss - _sbss)) + min_heap_size) + min_stack_size)), Not enough memory)
+
+.ARM.attributes
+                0x00000000       0x25
+ *(.ARM.attributes)
+ .ARM.attributes
+                0x00000000       0x25 bin/main.o
+ .ARM.attributes
+                0x00000025       0x25 bin/startup.o
+ .ARM.attributes
+                0x0000004a       0x25 bin/sysconf.o
+LOAD bin/main.o
+LOAD bin/startup.o
+LOAD bin/sysconf.o
+OUTPUT(bin/firmware.elf elf32-littlearm)
+LOAD linker stubs
+
+.debug_line     0x00000000      0x14f
+ .debug_line    0x00000000       0x4c bin/main.o
+ .debug_line    0x0000004c       0x68 bin/startup.o
+ .debug_line    0x000000b4       0x9b bin/sysconf.o
+
+.debug_info     0x00000000       0x96
+ .debug_info    0x00000000       0x35 bin/main.o
+ .debug_info    0x00000035       0x3f bin/startup.o
+ .debug_info    0x00000074       0x22 bin/sysconf.o
+
+.debug_abbrev   0x00000000       0x52
+ .debug_abbrev  0x00000000       0x21 bin/main.o
+ .debug_abbrev  0x00000021       0x1f bin/startup.o
+ .debug_abbrev  0x00000040       0x12 bin/sysconf.o
+
+.debug_aranges  0x00000000       0x70
+ .debug_aranges
+                0x00000000       0x20 bin/main.o
+ .debug_aranges
+                0x00000020       0x28 bin/startup.o
+ .debug_aranges
+                0x00000048       0x28 bin/sysconf.o
+
+.debug_str      0x00000000       0x8a
+ .debug_str     0x00000000       0x8a bin/main.o
+                                 0x4c (size before relaxing)
+ .debug_str     0x0000008a       0x66 bin/startup.o
+ .debug_str     0x0000008a       0x48 bin/sysconf.o
+
+.debug_ranges   0x00000000       0x40
+ .debug_ranges  0x00000000       0x20 bin/startup.o
+ .debug_ranges  0x00000020       0x20 bin/sysconf.o

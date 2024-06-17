@@ -103,7 +103,7 @@ wait_sysclk:
 
 @-------------------------------------------
 
-  .section .text._periphconf, "ax", %progbits
+  .section .text.periphconf, "ax", %progbits
   .global _periphconf
 _periphconf:
   @ GPIOC enable
@@ -127,7 +127,8 @@ _periphconf:
   STR   r1, [r0, #0x04] @ GPIOC_OTYPER
 
   @ set pull up resistor at PC8 
-  MOVW  r2, #(0b01 << 16)
+  MOV   r2, #0b01
+  LSL   r2, r2, #16
   STR   r1, [r0, #0x0C] @ GPIOC_PUPDR
 
   @ set PC5 medium speed
@@ -140,6 +141,6 @@ _periphconf:
 @-------------------------------------------
 
   .section .rodata, "a", %progbits
-  
+  .global GPIOC_BASE 
   .equ RCC_BASE, 0x40023800  @ base address of RCC in AHB bus
   .equ GPIOC_BASE, 0x40020800 @ base address of GPIO port C registers
