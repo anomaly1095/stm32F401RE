@@ -8,7 +8,7 @@
 
   .global reset_handler
   .global default_handler
-  
+  .extern _start
 
 @-------------------------------------------
 
@@ -152,7 +152,6 @@ g_pfnVectors:
   .thumb_set PendSV_Handler,default_handler
 
   .weak      SysTick_Handler
-  .thumb_set SysTick_Handler,default_handler
 
   .weak      WWDG_IRQHandler
   .thumb_set WWDG_IRQHandler,default_handler
@@ -322,41 +321,159 @@ g_pfnVectors:
   .weak      SPI4_IRQHandler
   .thumb_set SPI4_IRQHandler,default_handler 
 
+
 @-------------------------------------------
 
   .section .text.default_handler, "ax", %progbits
   .type default_handler, %function
+  .weak default_handler
 default_handler:
-  B .
+  B default_handler
+  .size default_handler, .-default_handler
+
+@-------------------------------------------
 
   .section .text.reset_handler, "ax", %progbits
   .type reset_handler, %function
 
 reset_handler:
-  LDR   sp, =_estack
-  LDR   r0, =_sidata
-  LDR   r1, =_sdata
-  LDR   r2, =_edata
-  LDR   r3, =_sbss
-  LDR   r4, =_ebss
-  MOV   r5, #0
-
+  LDR     sp, =_estack
+  BL      sys_config      @ setup system clocks, prescalers, timers
+  LDR     r0, =_sidata
+  LDR     r1, =_sdata
+  LDR     r2, =_edata
 copy_data:
-  CMP   r1, r2
-  BEQ   zero_bss
-  LDR   r6, [r0], #0x04
-  STR   r6, [r1], #0x04
-  B     copy_data
+  CMP     r1, r2
+  LDRNE   r3, [r0], #0x04 @ load word from FLASH
+  STRNE   r3, [r1], #0x04 @ store word in RAM
+  BNE     copy_data
 
+  LDR     r0, =_sbss
+  LDR     r1, =_ebss
+  MOV     r2, #0 
 zero_bss:
-  CMP   r3, r4
-  BEQ   xx
+  CMP     r0, r1
+  STRNE   r2, [r0], #0x04 @ store a zero in bss
+  BNE     zero_bss
 
-  BL    _sys_config
-  BL    _periph_config
-  BL    _start
-  B     default_handler
+  BL      periph_config
+  BL      _start
+  BL      default_handler
 
   .size reset_handler, .-reset_handler
+
+@----------------------------------------
+
+  .section .text.sys_config, "ax", %progbits
+  .type sys_config, %function
+  
+sys_config:
+  LDR     r0, =RCC_BASE
+
+HSI_enable:
+  LDR     r1, [r0, #0x00] @ RCC_CR
+  MOVW    r2, #0b1
+  ORR     r1, r1, r2
+  STR     r1, [r0, #0x00] @ RCC_CR
+
+  LSL     r2, r2, #1      @ shift to ready bits
+HSI_rdy_wait:
+  LDR     r1, [r0, #0x00] @ RCC_CR
+  TST     r1, r2
+  BEQ     wait_rdy_HSI
+
+  @ set pll at 84Mhz
+PLL_config:
+  LDR     r1, [r0, #0x04] @ RCC_PLLCFGR
+  @ PLLN
+  MOVW    r2, #336
+  LSL     r2, r2, #6
+  ORR     r1, r1, r2
+  @ PLLM
+  MOVW    r2, #16
+  ORR     r1, r1, r2
+  @ PLLP
+  MOVW    r2, #01
+  LSL     r2, r2, #16
+  ORR     r1, r1, r2
+  @ PLLSRC
+  MOVW    r2, #0b1
+  LSL     r2, r2, #22
+  ORR     r1, r1, r2
+  @ save changes
+  STR     r1, [r0, #0x04] @ RCC_PLLCFGR
+
+PLL_enable:
+  LDR     r1, [r0, #0x00] @ RCC_CR
+  MOV     r2, #0b1
+  LSL     r2, r2, #24
+  ORR     r1, r1, r2
+  STR     r1, [r0, #0x00] @ RCC_CR
+
+  LSL     r2, r2, #1      @ shift to ready bits
+PLL_rdy_wait:
+  LDR     r1, [r0, #0x00] @ RCC_CR
+  TST     r1, r2
+  BEQ     PLL_rdy_wait
+
+SYSCLK_set:
+  LDR     r1, [r0, #0x08] @ RCC_CFGR
+  MOV     r2, #0b10
+  ORR     r1, r1, r2
+  STR     r1, [r0, #0x08] @ RCC_CFGR
+
+  LSL     r2, #2          @ shift to ready bits
+SYSCLK_rdy_wait: 
+  LDR     r1, [r0, #0x08] @ RCC_CFGR
+  TST     r1, r2
+  BEQ     SYSCLK_rdy_wait
+
+  @ set HCLK at 84Mhz
+HPRE:
+  LDR     r1, [r0, #0x08] @ RCC_CFGR
+  MOVW    r2, #(0b1 << 4)
+  BIC     r1, r1, r2
+  STR     r1, [r0, #0x08] @ RCC_CFGR
+
+  @ set PCLK1 at AHB/2 = 42Mhz
+PPRE1:
+  LDR     r1, [r0, #0x08] @ RCC_CFGR
+  MOVW    r2, #(0b100 << 10)
+  ORR     r1, r1, r2
+  STR     r1, [r0, #0x08] @ RCC_CFGR
+
+  @ setting the processor timer to generate 1 interrupt each millisecond
+systick_config:
+  LDR     r0, =SYSTICK_BASE
+  @ set reload val
+  LDR     r1, [r0, #0x04] @ SYST_RVR
+  MOVW    r2, #10499      @ set reload val to 10500 ticks/ms
+  ORR     r1, r1, r2
+  STR     r1, [r0, #0x04] @ SYST_RVR
+  @ reset counter
+  MOV     r2, #0x0
+  STR     r2, [r0, #0x08] @ SYST_CVR
+  @ enable systick & systick interrupt (1 intr.ms⁻¹) & set HCLK 
+  LDR     r1, [r0, #0x00] @ SYST_CSR
+  MOV     r2, #0b111
+  ORR     r1, r1, r2
+  STR     r1, [r0, #0x00] @ SYST_CSR
+  @ return
+  BX      lr 
+  .size sysconfig, .-sysconfig
+
+@----------------------------------------
+
+  .section .rodata, "a", %progbits
+  .global RCC_BASE
+    
+  .equ RCC_BASE, 0x40023800
+  .equ SYSTICK_BASE, 0xE000E010
+  
+  .word _sidata
+  .word _sdata
+  .word _edata
+  .word _sbss
+  .word _ebss
 
 @-------------------------------------------
