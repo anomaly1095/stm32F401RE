@@ -27,7 +27,7 @@ __sysinit:
   LDR   r0, =RCC_BASE
 @-------------------------------------------clocks
 
-__hsi_enable:
+  @ enable hsi
   LDR   r1, [r0]            @ PLL_CR reg
   MOV   r2, #(0b1 << 0)
   ORR   r1, r1, r2
@@ -39,7 +39,7 @@ __hsi_wait:
   TST   r1, r2
   BEQ   __hsi_wait
 
-__pll_config:
+  @ configure pll at 84mhz
   LDR   r1, [r0, #0x04]     @ RCC_PLLCFGR reg
   @ pll source
   MOV   r2, #0b1
@@ -57,7 +57,7 @@ __pll_config:
   @ save changes
   STR   r1, [r0, #0x04]     @ RCC_PLLCFGR reg
 
-__pll_enable:
+  @ enable pll
   LDR   r1, [r0]            @ PLL_CR reg
   MOV   r2, #0b1
   LSL   r2, r2, #24         @ PLLON bit
@@ -70,7 +70,7 @@ __pll_wait:
   TST   r1, r2
   BEQ   __pll_wait
 
-__pll_as_sysclk:
+  @ set pll as sysclk
   LDR   r1, [r0, #0x08]     @ RCC_CFGR reg
   MOV   r2, #0b10           @ SW bits
   ORR   r1, r1, r2
@@ -82,13 +82,13 @@ __sysclk_wait:
   TST   r1, r2
   BEQ   __sysclk_wait
 
-__hclk_set:
+  @ set AHB prescaler
   LDR   r1, [r0, #0x08]     @ RCC_CFGR reg
   MOV   r2, #(0b1000 << 4)  @ HPRE bits
   BIC   r1, r1, r2          @ AHB = SYSCLK/1
   STR   r1, [r0, #0x08]
 
-__hpre_set:
+  @ set APB1/2 PRESCALERS
   LDR   r1, [r0, #0x08]     @ RCC_CFGR reg
   MOVW  r2, #(0b100 << 10)  @ PPRE1 bits APB1 = AHB/2
   MOVW  r3, #(0b100 << 13)  @ PPRE2 bits APB2 = AHB/1
@@ -98,7 +98,6 @@ __hpre_set:
 
 @------------------------------------------- flash
 
-__flash_config:
   LDR   r0, =FLASH_BASE
   @ reset data and instruction caches
   LDR   r1, [r0]            @ FLASH_ACR reg
@@ -134,8 +133,6 @@ __flash_config:
   STR   r1, [r0]    @ NVIC_ISER1 reg
 
 @------------------------------------------- gpio 
-
-__gpio_config:
   @ reset GPIO_A/C
   LDR   r0, =RCC_BASE
   LDR   r1, [r0, #0x10]     @ RCC_AHB1RSTR reg
@@ -175,7 +172,7 @@ __gpio_config:
   MOVW  r2, #(0b10 << 01)   @ OSPEEDR 
   ORR   r1, r1, r2
   STR   r1, [r0, #0x08]     @ GPIOA_OSPEEDR reg
-  @ set PA no push no pull
+  @ set PA5 no pull up no pull down
   LDR   r1, [r0, #0x0C]     @ GPIOA_PUPDR
   MOVW  r2, #0b11
   LSL   r2, r2, #26         @ PUPDR5 bits (None)
@@ -188,11 +185,10 @@ __gpio_config:
   ORR   r1, r1, r2
   STR   r1, [r0, #0x30]     @ RCC_AHB1ENR reg
 
-__gpio_interrupts:
-  @ set PC13 as EXTI13 source 
+  @ set PC13 as EXTI13 source ----------------- EXTI13 interrupt
   LDR   r0, =SYSCFG_BASE
   LDR   r1, [r0, #0x14]     @ SYSCFG_EXTICR4
-  MOV   r2, #(0b0010 << 4)  @ EXTI13 bits  
+  MOV   r2, #(0b0010 << 4)  @ EXTI13 bits
   ORR   r1, r1, r2
   STR   r1, [r0, #0x14]     @ SYSCFG_EXTICR4 reg
   @ mask interrupt EXTI13
@@ -213,7 +209,7 @@ __gpio_interrupts:
   ORR   r1, r1, r2
   STR   r1, [r0, #0x04]    @ NVIC_ISER2 reg
 
-__systick_config:
+@--------------------------------------------------SYSTICK
   LDR   r0, =SYSTICK_BASE
   MOVW  r1, #10499          @ set the counter to 10499 to generate & interrupt/ms
   STR   r1, [r0, #0x04]     @ STK_LOAD reg
@@ -235,6 +231,7 @@ __systick_config:
 @-------------------------------------------
 
   .section .rodata, "a", %progbits
+  .global EXTI_BASE
   .equ RCC_BASE, 0x40023800
   .equ SYSTICK_BASE, 0xE000E010
   .equ FLASH_BASE, 0x40023C00
