@@ -3,7 +3,7 @@
 @ 
 .syntax unified
 .cpu cortex-m4
-.fpu fpv4-sp-d16 // HARDWARE FLOATING POINT UNIT
+.fpu fpv4-sp-d16
 .thumb
 @-------------------------------------------
 
@@ -302,13 +302,13 @@ g_pfnVectors:
                 
   .weak      USART6_IRQHandler
   .thumb_set USART6_IRQHandler,default_handler
-                      
+
   .weak      I2C3_EV_IRQHandler
   .thumb_set I2C3_EV_IRQHandler,default_handler
-                      
+
   .weak      I2C3_ER_IRQHandler   
   .thumb_set I2C3_ER_IRQHandler,default_handler
-                      
+
   .weak      FPU_IRQHandler
   .thumb_set FPU_IRQHandler,default_handler  
 
