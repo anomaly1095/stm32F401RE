@@ -240,4 +240,5 @@ __sysclk_wait:
   .equ EXTI_BASE, 0x40013C00
   .equ GPIOA_BASE, 0x40020000
   .equ GPIOC_BASE, 0x40020800
+
 @-------------------------------------------

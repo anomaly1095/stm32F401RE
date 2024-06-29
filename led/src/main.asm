@@ -9,8 +9,8 @@
   .type _start, %function
   .global _start
 _start:
-  B .
-
-  Bx lr
+  WFI
+  B   _start
+  Bx  lr
   .size _start, .-_start
 
