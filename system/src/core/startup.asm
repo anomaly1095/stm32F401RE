@@ -247,7 +247,7 @@ g_pfnVectors:
   .thumb_set SPI2_IRQHandler, _default_handler
                 
   .weak      USART1_IRQHandler
-  .thumb_set USART1_IRQHandler, _default_handlerr
+  .thumb_set USART1_IRQHandler, _default_handler
                   
   .weak      USART2_IRQHandler
   .thumb_set USART2_IRQHandler, _default_handler
@@ -335,27 +335,37 @@ _default_handler:
   .extern _start
 
 _reset_handler:
-  LDR   sp, =_estack
-  LDR   r0, =_sidata
-  LDR   r1, =_sdata
-  LDR   r2, =_edata
-__copy_data:
+  LDR   sp, =_msp
+
+@ copy kernel .data section from FLASH to SRAM
+  LDR   r0, =_si_k_data
+  LDR   r1, =_s_k_data
+  LDR   r2, =_e_k_data
+__copy_k_data:
   CMP   r1, r2
   LDRNE r3, [r0], #0x04
   STRNE r3, [r1], #0x04
   BNE   __copy_data
 
-  LDR   r0, =_sbss
-  LDR   r1, =_ebss
+@ initialize kernel .bss section with zeross
+  LDR   r0, =_s_k_bss
+  LDR   r1, =_e_k_bss
   MOV   r2, #0
-__zero_bss:
+__zero_k_bss:
   CMP   r0, r1
   STRNE r2, [r0], #4
   BNE   __zero_bss
 
+  @ transition to system initialization
   BL    _sysinit
+
+  @ app initialization
+  BL    _appinit
+
+  @ branch to application firmware
   BL    _start
 
+  @ if execution ever returns from firmware: branch to _default_handler
   B     _default_handler
   
   .size _reset_handler, .-_reset_handler
@@ -363,8 +373,8 @@ __zero_bss:
 @-------------------------------------------
 
   .section .rodata, "a", %progbits
-  .word 
-  .word _sdata
-  .word _edata
-  .word _sbss
-  .word _ebss
+  .word _si_k_data @ start of kernel .data section in FLASH
+  .word _s_k_data  @ start of kernel .data section in SRAM
+  .word _e_k_data  @ end   of kernel .data section in SRAM
+  .word _s_k_bss   @ start of kernel .bss  section in SRAM
+  .word _e_k_bss   @ end   of kernel .bss  section in SRAM

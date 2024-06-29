@@ -41,7 +41,8 @@ SECTIONS
   .k_text :
   {
     ALIGN(4);
-    /*add sections*/
+    *(._reset_handler)
+    *(_sysinit)
     ALIGN(4);
   } > K_CODE
 
@@ -49,7 +50,9 @@ SECTIONS
   .k_rodata : 
   {
     ALIGN(4);
-    /*add sections*/
+    *(.rodata.k_regs)
+    *(.rodata.masks)
+    *(.rodata.keys)
     ALIGN(4);
   } > K_DATA
 
