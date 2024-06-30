@@ -1,11 +1,10 @@
+
 MEMORY
 {
   /* 512KB of FLASH memory */
-  FLASH (rwx)   : ORIGIN = 0x08000000, LENGTH = 512K  /* full FLASH */
-  K_DATA (rw)   : ORIGIN = 0x08000000, LENGTH = 32K   /* sectors 0,1 */
-  APP_DATA (rw) : ORIGIN = 0x08008000, LENGTH = 96K   /* sectors 2,3,4 */
-  APP_CODE (rx) : ORIGIN = 0x08020000, LENGTH = 256K  /* sectors 5,6 */
-  K_CODE (rx)   : ORIGIN = 0x08060000, LENGTH = 128K  /* Sector 7 */
+  FLASH (rx)     : ORIGIN = 0x08000000, LENGTH = 512K   /* full FLASH */
+  K_FLASH (rx)   : ORIGIN = 0x08000000, LENGTH = 128K   /* sectors 0..4*/
+  APP_FLASH (rx) : ORIGIN = 0x08020000, LENGTH = 384K   /* sectors 5..7*/
   
   /* 96KB of volatile memory */
   SRAM (rw)     : ORIGIN = 0x20000000, LENGTH = 96K   /* FULL SRAM */
@@ -35,7 +34,7 @@ SECTIONS
     ALIGN(4);
     KEEP(*(.isr_vector))
     ALIGN(4);
-  } > K_DATA
+  } > K_FLASH
 
   /* Kernel code section */
   .k_text :
@@ -44,7 +43,7 @@ SECTIONS
     *(._reset_handler)
     *(_sysinit)
     ALIGN(4);
-  } > K_CODE
+  } > K_FLASH
 
   /* Kernel read-only data section */
   .k_rodata : 
@@ -54,7 +53,7 @@ SECTIONS
     *(.rodata.masks)
     *(.rodata.keys)
     ALIGN(4);
-  } > K_DATA
+  } > K_FLASH
 
   _si_k_data = LOADADDR(.k_data);
 
@@ -66,7 +65,7 @@ SECTIONS
     /*add sections*/
     _e_k_data = .;
     ALIGN(4);
-  } > K_SRAM AT> K_DATA
+  } > K_SRAM AT> K_FLASH
 
   .k_bss (NOLOAD): 
   {
@@ -109,7 +108,7 @@ SECTIONS
     *(.glue_7t)        /* glue thumb to arm code */
     *(.eh_frame)
     ALIGN(4);
-  } > APP_CODE
+  } > APP_FLASH
 
   /* Application read-only data section */
   .app_rodata : 
@@ -117,7 +116,7 @@ SECTIONS
     ALIGN(4);
     /*add sections*/
     ALIGN(4);
-  } > APP_DATA
+  } > APP_FLASH
 
   .ARM :
   {
@@ -126,7 +125,7 @@ SECTIONS
     *(.ARM.exidx*)
     __exidx_end = .;
     . = ALIGN(4);
-  } > APP_CODE
+  } > APP_FLASH
 
   _si_app_data = LOADADDR(.app_data);
 
@@ -138,7 +137,7 @@ SECTIONS
     /*add sections*/
     _e_app_data = .;
     ALIGN(4);
-  } > APP_SRAM AT> APP_DATA
+  } > APP_SRAM AT> APP_FLASH
 
   .app_bss (NOLOAD): 
   {
@@ -170,19 +169,19 @@ SECTIONS
   } > APP_SRAM
 
   /* Assertions to ensure memory allocations are within limits */
-  ASSERT(_e_app_data <= ORIGIN(APP_DATA) + LENGTH(APP_DATA), "Not enough application data space")
-  ASSERT(_e_app_bss <= ORIGIN(APP_SRAM) + LENGTH(APP_SRAM), "Not enough application BSS space")
-  ASSERT(_e_app_heap <= ORIGIN(APP_SRAM) + LENGTH(APP_SRAM), "Not enough application heap space")
+  ASSERT(_e_app_data  <= ORIGIN(APP_FLASH)+ LENGTH(APP_FLASH),"Not enough application data space")
+  ASSERT(_e_app_bss   <= ORIGIN(APP_SRAM) + LENGTH(APP_SRAM), "Not enough application BSS space")
+  ASSERT(_e_app_heap  <= ORIGIN(APP_SRAM) + LENGTH(APP_SRAM), "Not enough application heap space")
   ASSERT(_e_app_stack <= ORIGIN(APP_SRAM) + LENGTH(APP_SRAM), "Not enough application stack space")
 
-  ASSERT(_e_k_data <= ORIGIN(K_DATA) + LENGTH(K_DATA), "Not enough kernel data space")
-  ASSERT(_e_k_bss <= ORIGIN(K_SRAM) + LENGTH(K_SRAM), "Not enough kernel BSS space")
-  ASSERT(_e_k_heap <= ORIGIN(K_SRAM) + LENGTH(K_SRAM), "Not enough kernel heap space")
-  ASSERT(_e_k_stack <= ORIGIN(K_SRAM) + LENGTH(K_SRAM), "Not enough kernel stack space")
+  ASSERT(_e_k_data    <= ORIGIN(K_FLASH)  + LENGTH(K_FLASH),  "Not enough kernel data space")
+  ASSERT(_e_k_bss     <= ORIGIN(K_SRAM)   + LENGTH(K_SRAM),   "Not enough kernel BSS space")
+  ASSERT(_e_k_heap    <= ORIGIN(K_SRAM)   + LENGTH(K_SRAM),   "Not enough kernel heap space")
+  ASSERT(_e_k_stack   <= ORIGIN(K_SRAM)   + LENGTH(K_SRAM),   "Not enough kernel stack space")
 
   /* Ensure total allocation within APP_SRAM and K_SRAM limits */
-  ASSERT(_e_app_data <= ORIGIN(APP_SRAM) + LENGTH(APP_SRAM), "Total application SRAM allocation exceeded")
-  ASSERT(_e_k_data <= ORIGIN(K_SRAM) + LENGTH(K_SRAM), "Total kernel SRAM allocation exceeded")
+  ASSERT(_e_app_data  <= ORIGIN(APP_SRAM) + LENGTH(APP_SRAM), "Total application SRAM allocation exceeded")
+  ASSERT(_e_k_data    <= ORIGIN(K_SRAM)   + LENGTH(K_SRAM),   "Total kernel SRAM allocation exceeded")
 
   .ARM.attributes 0 : { *(.ARM.attributes) }
 }

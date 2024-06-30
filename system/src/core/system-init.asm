@@ -21,6 +21,12 @@ __hsi_wait:
   TST   r1, r2
   BEQ   __hsi_wait          @ wait for hsi te be enabled
 
+__pwr_config:
+  @ set VOS bits to 0x10 (power scale 2)
+  @ set DBP to enable write access to RTC registers
+  @ flash in power down in stop mode
+  @ enable PVD
+
   @ PLL config (prescalers and source)
   LDR   r1, [r0, #0x04]     @ RCC_PLLGFGR reg
   MOVW  r2, #336            @ PLLN (bit 6..14) = 336
@@ -129,6 +135,66 @@ __systick_config:
 
 __mpu_config:
 
+  @ For each section:
+  @ 1- set the VALID bit
+  @ 2- load the starting address in ADDR
+  @ 3- set the xn(instruction fetches), AP(access permission), TEX(), S(shareable or not), C(cacheable), B(bufferable), 
+  @     SRD (to disable overlapping regions in flash and sram), SIZE (size in bytes = 2^(SIZE+1)), then ENABLE
+
+Region 0: 0x00000000 to 0x1FFFFFFF (FLASH)
+
+    TEX, C, B: Typically, this region is cacheable and bufferable (TEX = 000, C = 1, B = 1).
+    AP: Read-only or read-write, depending on your needs.
+    xn: 0 (since code execution from FLASH is required).
+    S: not shareable.
+
+Region 1: 0x80000000 to 0x8001FFFF (Kernel FLASH)
+
+    TEX, C, B: Similar to Region 0, set as cacheable and bufferable.
+    AP: Set access permissions according to kernel requirements.
+    xn: Typically 0, as kernel code needs to be executable.
+    S: Usually shareable.
+
+Region 2: 0x20000000 to 0x3FFFFFFF (SRAM)
+
+    TEX, C, B: Cacheable and bufferable (TEX = 000, C = 1, B = 1).
+    AP: Read-write access.
+    S: Usually shareable.
+    xn: 1 for non-executable memory regions
+    S: Usually shareable.
+
+
+Region 3: 0x20010000 to 0x20018000 (Kernel SRAM)
+
+    TEX, C, B: Same as Region 2.
+    AP: Kernel-specific access permissions.
+    xn: Typically 1, as this is data memory.
+    S: Usually shareable.
+
+Region 4: 0x40000000 to 0x5FFFFFFF (Peripherals)
+
+    TEX, C, B: Device memory (TEX = 000, C = 0, B = 1).
+    AP: Typically read-write.
+    xn: 1, as peripheral registers are not executable.
+    S: Usually shareable.
+
+Region 5: 0x60000000 to 0xDFFFFFFF (Not used)
+
+    Leave this region unconfigured or disable it.
+
+Region 6: 0xE0000000 to 0xE00FFFFF (System Peripherals)
+
+    TEX, C, B: Device memory (TEX = 000, C = 0, B = 1).
+    AP: Read-write, according to system needs.
+    xn: 1, not executable.
+    S: Shareable, typically.
+
+Region 7: 0xE0010000 to 0xFFFFFFFF (ST32 Standard Peripherals)
+
+    TEX, C, B: Device memory (TEX = 000, C = 0, B = 1).
+    AP: Read-write.
+    xn: 1, not executable.
+    S: Shareable.
 
 __exception_config:
 
