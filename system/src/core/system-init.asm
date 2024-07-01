@@ -97,15 +97,15 @@ __flash_config:
 
   @ unlock FLASH_OPTCR for Option bytes config
   LDR   r1, =OPTKEY1
-  STREX r2, r1, [r0, 0x08]      @ FLASH_OPTKEYR reg
+  STREX r2, r1, [r0, 0x08]  @ FLASH_OPTKEYR reg
   LDR   r2, =OPTKEY2  
-  STREX r1, r2, [r0, 0x08]      @ FLASH_OPTKEYR reg
+  STREX r1, r2, [r0, 0x08]  @ FLASH_OPTKEYR reg
 
   @ unlock FLASH_CR
   LDR   r1, =KEY1 
-  STREX r2, r1, [r0, 0x04]      @ FLASH_KEYR reg
+  STREX r2, r1, [r0, 0x04]  @ FLASH_KEYR reg
   LDR   r2, =KEY2 
-  STREX r1, r2, [r0, 0x04]      @ FLASH_KEYR reg
+  STREX r1, r2, [r0, 0x04]  @ FLASH_KEYR reg
   
 
   @ lock FLASH_CR
@@ -134,67 +134,93 @@ __systick_config:
   STR   r1, [r0]            @ STK_CTRL reg
 
 __mpu_config:
+  LDR   r0, =MPU_BASE       @ Load MPU base address
+  LDR   r1, [r0]            @ Load MPU_TYPER register to check MPU type
 
-  @ For each section:
-  @ 1- set the VALID bit
-  @ 2- load the starting address in ADDR
-  @ 3- set the xn(instruction fetches), AP(access permission), TEX(), S(shareable or not), C(cacheable), B(bufferable), 
-  @     SRD (to disable overlapping regions in flash and sram), SIZE (size in bytes = 2^(SIZE+1)), then ENABLE
+  @ Check for DREGION bits to see if MPU supports regions
+  MOVW  r2, #(0x8 << 8)       @ Prepare mask for DREGION bits
+  TST   r1, r2                
+  BEQ   __exception_config    @ Branch out if no MPU support
+  MOV   r2, #0b1              @ SEPARATE flag bit
+  TST   r1, r2
+  MOV   r2, #0b111
+  ITTEE EQ                    @ Check if separate sections are not supported or only unified
+  LDREQ r1, [r0, #0x04]       @ MPU_CTRL reg
+  ORREQ r1, r2                @ Set ENABLE, PRIVDEFENA, and HFNMIENA bits
+  STREQ r1, [r0, #0x04]       @ MPU_CTRL reg
+  BEQ   __exception_config    @ branch out with section config
 
-Region 0: 0x00000000 to 0x1FFFFFFF (FLASH)
+  LDR   r0, =MPU_BASE
 
-    TEX, C, B: Typically, this region is cacheable and bufferable (TEX = 000, C = 1, B = 1).
-    AP: Read-only or read-write, depending on your needs.
-    xn: 0 (since code execution from FLASH is required).
-    S: not shareable.
+  @ Configure Region 0: 0x00000000 to 0x1FFFFFFF (FLASH)
+  LDR   r1, =SECTION0_BASE      @ Load base address of Region 0
+  ORR   r1, r1, #(0 << 4) | 1   @ Region number 0, VALID bit
+  STR   r1, [r0, #0x0C]         @ MPU_RBAR reg
 
-Region 1: 0x80000000 to 0x8001FFFF (Kernel FLASH)
+  MOVW  r2, (31 << 1) | (0b001 << 24) | (0b011 << 16) | 1  @ Size: 512MB, TEX=0, C=1, B=1, S=0, AP=Full access
+  STR   r2, [r0, #0x10]         @ MPU_RASR reg
 
-    TEX, C, B: Similar to Region 0, set as cacheable and bufferable.
-    AP: Set access permissions according to kernel requirements.
-    xn: Typically 0, as kernel code needs to be executable.
-    S: Usually shareable.
+  @ Configure Region 1: 0x00000000 to 0x0001FFFF (Kernel FLASH)
+  LDR   r1, =SECTION1_BASE      @ Load base address of Region 1
+  ORR   r1, r1, #(1 << 4) | 1   @ Region number 1, VALID bit
+  STR   r1, [r0, #0x0C]         @ MPU_RBAR reg
 
-Region 2: 0x20000000 to 0x3FFFFFFF (SRAM)
+  MOVW  r2, (16 << 1) | (0b001 << 24) | (0b011 << 16) | 1  @ Size: 128KB, TEX=0, C=1, B=1, S=0, AP=Full access
+  STR   r2, [r0, #0x10]         @ MPU_RASR reg
 
-    TEX, C, B: Cacheable and bufferable (TEX = 000, C = 1, B = 1).
-    AP: Read-write access.
-    S: Usually shareable.
-    xn: 1 for non-executable memory regions
-    S: Usually shareable.
+  @ Configure Region 2: 0x08000000 to 0x0801FFFF (Kernel FLASH)
+  MOV   r1, SECTION2_BASE       @ Load base address of Region 2
+  ORR   r1, r1, #(2 << 4) | 1   @ Region number 2, VALID bit
+  STR   r1, [r0, #0x0C]         @ MPU_RBAR reg
+
+  MOV   r2, (16 << 1) | (0b001 << 24) | (0b011 << 16) | 1  @ Size: 128KB, TEX=0, C=1, B=1, S=0, AP=Full access
+  STR   r2, [r0, #0x10]         @ MPU_RASR reg
+
+  @ Configure Region 3: 0x20000000 to 0x3FFFFFFF (SRAM)
+  MOV   r1, SECTION3_BASE       @ Load base address of Region 3
+  ORR   r1, r1, #(3 << 4) | 1   @ Region number 3, VALID bit
+  STR   r1, [r0, #0x0C]         @ MPU_RBAR reg
+
+  MOV   r2, (29 << 1) | (0b001 << 24) | (0b011 << 16) | 1  @ Size: 512MB, TEX=0, C=1, B=1, S=0, AP=Full access
+  STR   r2, [r0, #0x10]         @ MPU_RASR reg
+
+  @ Configure Region 4: 0x20010000 to 0x20017FFF (Kernel SRAM)
+  MOV   r1, SECTION4_BASE       @ Load base address of Region 4
+  ORR   r1, r1, #(4 << 4) | 1   @ Region number 4, VALID bit
+  STR   r1, [r0, #0x0C]         @ MPU_RBAR reg
+
+  MOV   r2, (14 << 1) | (0b001 << 24) | (0b011 << 16) | 1  @ Size: 32KB, TEX=0, C=1, B=1, S=0, AP=Full access
+  STR   r2, [r0, #0x10]       @ MPU_RASR reg
+
+  @ Configure Region 5: 0x40000000 to 0x5FFFFFFF (Peripherals)
+  MOV   r1, SECTION5_BASE     @ Load base address of Region 5
+  ORR   r1, r1, #(5 << 4) | 1 @ Region number 5, VALID bit
+  STR   r1, [r0, #0x0C]       @ MPU_RBAR reg
+
+  MOV   r2, (29 << 1) | (0b010 << 24) | (0b000 << 16) | 1  @ Size: 512MB, TEX=0, C=0, B=0, S=1, AP=Full access
+  STR   r2, [r0, #0x10]       @ MPU_RASR reg
+
+  @ Configure Region 6: 0xE0000000 to 0xE00FFFFF (System Peripherals)
+  MOV   r1, SECTION6_BASE     @ Load base address of Region 6
+  ORR   r1, r1, #(6 << 4) | 1 @ Region number 6, VALID bit
+  STR   r1, [r0, #0x0C]       @ MPU_RBAR reg
+
+  MOV   r2, (19 << 1) | (0b010 << 24) | (0b000 << 16) | 1  @ Size: 1MB, TEX=0, C=0, B=0, S=1, AP=Full access
+  STR   r2, [r0, #0x10]       @ MPU_RASR reg
+
+  @ Configure Region 7: 0xE0100000 to 0xFFFFFFFF (STM32 Standard Peripherals)
+  MOV   r1, SECTION7_BASE     @ Load base address of Region 7
+  ORR   r1, r1, #(7 << 4) | 1 @ Region number 7, VALID bit
+  STR   r1, [r0, #0x0C]       @ MPU_RBAR reg
+
+  MOV   r2, (30 << 1) | (0b010 << 24) | (0b000 << 16) | 1  @ Size: 511MB, TEX=0, C=0, B=0, S=1, AP=Full access
+  STR   r2, [r0, #0x10]       @ MPU_RASR reg
 
 
-Region 3: 0x20010000 to 0x20018000 (Kernel SRAM)
-
-    TEX, C, B: Same as Region 2.
-    AP: Kernel-specific access permissions.
-    xn: Typically 1, as this is data memory.
-    S: Usually shareable.
-
-Region 4: 0x40000000 to 0x5FFFFFFF (Peripherals)
-
-    TEX, C, B: Device memory (TEX = 000, C = 0, B = 1).
-    AP: Typically read-write.
-    xn: 1, as peripheral registers are not executable.
-    S: Usually shareable.
-
-Region 5: 0x60000000 to 0xDFFFFFFF (Not used)
-
-    Leave this region unconfigured or disable it.
-
-Region 6: 0xE0000000 to 0xE00FFFFF (System Peripherals)
-
-    TEX, C, B: Device memory (TEX = 000, C = 0, B = 1).
-    AP: Read-write, according to system needs.
-    xn: 1, not executable.
-    S: Shareable, typically.
-
-Region 7: 0xE0010000 to 0xFFFFFFFF (ST32 Standard Peripherals)
-
-    TEX, C, B: Device memory (TEX = 000, C = 0, B = 1).
-    AP: Read-write.
-    xn: 1, not executable.
-    S: Shareable.
+  LDR   r1, [r0, #0x04]       @ MPU_CTRL reg
+  MOV   r2, #0b111
+  ORR   r1, r2                @ Set ENABLE, PRIVDEFENA, and HFNMIENA bits
+  STR   r1, [r0, #0x04]       @ MPU_CTRL reg
 
 __exception_config:
 
@@ -221,14 +247,49 @@ __fpu_config:
   .equ SYSTICK_BASE, 0xE000E010
 
   .section .rodata.masks, "a", %progbits
-  .equ FLASH_CFG_MASK 0b1100100000010
+  .equ FLASH_CFG_MASK, 0b1100100000010
+
+  .section .rodata.sections, "a", %progbits
+
+  @----------------------------- System Peripheral Space
+  .equ SECTION7_SIZE, 0x00100000    @ 1MB
+  .equ SECTION7_BASE, 0xE0000000
+
+  @----------------------------- Bit-Band Area of DMA Controller
+  .equ SECTION6_SIZE, 0x00020000    @ 128KB
+  .equ SECTION6_BASE, 0x424C0000
+
+  @----------------------------- DMA Controller
+  .equ SECTION5_SIZE, 0x00001000    @ 4KB
+  .equ SECTION5_BASE, 0x40026000
+
+  @----------------------------- Peripheral Registers
+  .equ SECTION4_SIZE, 0x20000000    @ 512MB
+  .equ SECTION4_BASE, 0x40000000
+
+  @----------------------------- Bit-Band Area of KERNEL SRAM
+  .equ SECTION3_SIZE, 0x00100000    @ 1MB
+  .equ SECTION3_BASE, 0x22200000
+
+  @----------------------------- KERNEL SRAM
+  .equ SECTION2_SIZE, 0x00008000    @ 32KB
+  .equ SECTION2_BASE, 0x20010000
+
+  @----------------------------- SRAM
+  .equ SECTION1_SIZE, 0x20000000    @ 512MB
+  .equ SECTION1_BASE, 0x20000000
+
+  @----------------------------- FLASH for kernel and apps
+  .equ SECTION0_SIZE, 0x20000000    @ 512MB
+  .equ SECTION0_BASE, 0x00000000
+
 @-------------------------------------------
   
   .section .rodata.keys, "a", %progbits
   @ no read no write section
-  .equ OPTKEY1, 0x08192A3B  @ unlock Option byte write ops
-  .equ OPTKEY2, 0x4C5D67F   @ unlock Option byte write ops
-  .equ KEY1, 0x45670123     @ unlock FLASH_CR access  
-  .equ KEY2, 0xCDEF89AB     @ unlock FLASH_CR access  
-  k_code_checksum: .word    @ checksum to validate kernel code section
-  k_data_checksum: .word    @ checksum to validate kernel data section
+  .equ OPTKEY1, 0x08192A3B    @ unlock Option byte write ops
+  .equ OPTKEY2, 0x4C5D67F     @ unlock Option byte write ops
+  .equ KEY1, 0x45670123       @ unlock FLASH_CR access to program/erase FLASH memory  
+  .equ KEY2, 0xCDEF89AB       @ unlock FLASH_CR access to program/erase FLASH memory  
+  k_code_checksum: .word      @ checksum to validate kernel code section
+  k_data_checksum: .word      @ checksum to validate kernel data section
