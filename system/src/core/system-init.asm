@@ -79,6 +79,7 @@ __sysclk_wait:
   STR   r1, [r0, #0x08]     @ RCC_CFGR reg
   
 __check_hash:
+
   @ CRC checksum on kernel space
 
 
@@ -95,30 +96,45 @@ __flash_config:
   ORR   r1, r1, r2
   STR   r1, [r0]            @ FLASH_ACR reg
 
-  @ unlock FLASH_OPTCR for Option bytes config
+  @ unlock FLASH_OPTCR
   LDR   r1, =OPTKEY1
   STREX r2, r1, [r0, 0x08]  @ FLASH_OPTKEYR reg
   LDR   r2, =OPTKEY2  
   STREX r1, r2, [r0, 0x08]  @ FLASH_OPTKEYR reg
-
   @ unlock FLASH_CR
   LDR   r1, =KEY1 
   STREX r2, r1, [r0, 0x04]  @ FLASH_KEYR reg
   LDR   r2, =KEY2 
   STREX r1, r2, [r0, 0x04]  @ FLASH_KEYR reg
   
+  LDR   r1, [r0, #0x14]     @ FLASH_OPTCR reg
+  @----!!!!!!!!ENABLE ONLY AFTER PRODUCTION!!!!!!!!!----
+  @ MOVT  r2, #0b11111
+  @ ORR   r1, r1, r2        @ enable write protection
+  @ MOV   r2, #0b1
+  @ ROR   r2, r2, #1
+  @ BIC   r1, r1, r2        @ use write protection instead of PCROP protection (BIC instead of ORR)
+  MOVW  r2, #(0b01 << 2)    @ Set the BOR (brown out reset) level
+  ORR   r1, r1, r2 
+  MOVW  r2, #(0xAA << 8)    @ set Read protection level to 0
+  ORR   r1, r1, r2 
+  STR   r1, [r0, #0x14]     @ FLASH_OPTCR reg 
 
-  @ lock FLASH_CR
   LDR   r1, [r0, #0x10]     @ FLASH_CR reg
-  MOV   r2, #0b1
-  ROR   r2, #1
+  MOVT  r2, #(01b0000011 << 8) @ enable FLASH interrupts and lock the register
   ORR   r1, r1, r2
   STR   r1, [r0, #0x10]     @ FLASH_CR reg
+
   @ lock FLASH_OPTCR
   LDR   r1, [r0, #0x14]     @ FLASH_OPTCR reg
   MOV   r2, #0b1
   ORR   r1, r1, r2
   STR   r1, [r0, #0x14]     @ FLASH_OPTCR reg
+  @ lock FLASH_CR
+  LDR   r1, [r0, #0x10]     @ FLASH_CR reg
+  ROR   r2, #1
+  ORR   r1, r1, r2
+  STR   r1, [r0, #0x10]     @ FLASH_CR reg
 
 @ enable systick and it's interrupt
 __systick_config:
@@ -154,8 +170,8 @@ __mpu_config:
   @ Configure REGION0: 0x00000000 to 0x1FFFFFFF (FLASH for kernel and apps)
   LDR   r1, =SECTION0_BASE
   MOVW  r2, #0b10000            @ Region number 0, VALID bit
+  ORR   r1, r1, r2
   STR   r2, [r0, #0x0C]         @ MPU_RBAR reg
-  STR   r1, [r0, #0x0C]         @ MPU_RBAR reg
 
   LDR   r2, =SECTION0_MASK
   STR   r2, [r0, #0x10]         @ MPU_RASR reg
@@ -163,8 +179,8 @@ __mpu_config:
   @ Configure REGION1: 0x20000000 to 0x3FFFFFFF (SRAM)
   LDR   r1, =SECTION1_BASE
   MOVW  r2, #0b10001            @ Region number 1, VALID bit
+  ORR   r1, r1, r2
   STR   r2, [r0, #0x0C]         @ MPU_RBAR reg
-  STR   r1, [r0, #0x0C]         @ MPU_RBAR reg
 
   LDR   r2, =SECTION1_MASK
   STR   r2, [r0, #0x10]         @ MPU_RASR reg
@@ -172,8 +188,8 @@ __mpu_config:
   @ Configure REGION2: 0x20010000 to 0x20017FFF (Kernel SRAM)
   LDR   r1, =SECTION2_BASE
   MOVW  r2, #0b10010            @ Region number 2, VALID bit
+  ORR   r1, r1, r2
   STR   r2, [r0, #0x0C]         @ MPU_RBAR reg
-  STR   r1, [r0, #0x0C]         @ MPU_RBAR reg
 
   LDR   r2, =SECTION2_MASK
   STR   r2, [r0, #0x10]         @ MPU_RASR reg
@@ -181,8 +197,8 @@ __mpu_config:
   @ Configure REGION3: 0x22200000 to 0x222FFFFF (Bit-Band Area of Kernel SRAM)
   LDR   r1, =SECTION3_BASE
   MOVW  r2, #0b10011            @ Region number 3, VALID bit
+  ORR   r1, r1, r2
   STR   r2, [r0, #0x0C]         @ MPU_RBAR reg
-  STR   r1, [r0, #0x0C]         @ MPU_RBAR reg
 
   LDR   r2, =SECTION3_MASK
   STR   r2, [r0, #0x10]         @ MPU_RASR reg
@@ -190,8 +206,8 @@ __mpu_config:
   @ Configure REGION4: 0x40000000 to 0x5FFFFFFF (Peripheral Registers)
   LDR   r1, =SECTION4_BASE
   MOVW  r2, #0b10100            @ Region number 4, VALID bit
+  ORR   r1, r1, r2
   STR   r2, [r0, #0x0C]         @ MPU_RBAR reg
-  STR   r1, [r0, #0x0C]         @ MPU_RBAR reg
 
   LDR   r2, =SECTION4_MASK
   STR   r2, [r0, #0x10]         @ MPU_RASR reg
@@ -199,8 +215,8 @@ __mpu_config:
   @ Configure REGION5: 0x40026000 to 0x40026FFF (DMA Controller)
   LDR   r1, =SECTION5_BASE
   MOVW  r2, #0b10101            @ Region number 5, VALID bit
+  ORR   r1, r1, r2
   STR   r2, [r0, #0x0C]         @ MPU_RBAR reg
-  STR   r1, [r0, #0x0C]         @ MPU_RBAR reg
 
   LDR   r2, =SECTION5_MASK
   STR   r2, [r0, #0x10]         @ MPU_RASR reg
@@ -208,8 +224,8 @@ __mpu_config:
   @ Configure REGION6: 0x424C0000 to 0x424DFFFF (Bit-Band Area of DMA Controller)
   LDR   r1, =SECTION6_BASE
   MOVW  r2, #0b10110            @ Region number 6, VALID bit
+  ORR   r1, r1, r2
   STR   r2, [r0, #0x0C]         @ MPU_RBAR reg
-  STR   r1, [r0, #0x0C]         @ MPU_RBAR reg
 
   LDR   r2, =SECTION6_MASK
   STR   r2, [r0, #0x10]         @ MPU_RASR reg
@@ -217,8 +233,8 @@ __mpu_config:
   @ Configure REGION7: 0xE0000000 to 0xE00FFFFF (System Peripheral Space)
   LDR   r1, =SECTION7_BASE
   MOVW  r2, #0b10111            @ Region number 7, VALID bit
+  ORR   r1, r1, r2
   STR   r2, [r0, #0x0C]         @ MPU_RBAR reg
-  STR   r1, [r0, #0x0C]         @ MPU_RBAR reg
 
   LDR   r2, =SECTION7_MASK
   STR   r2, [r0, #0x10]         @ MPU_RASR reg
@@ -229,15 +245,13 @@ __mpu_config:
   ORR   r1, r2                @ Set ENABLE, PRIVDEFENA, and HFNMIENA bits
   STR   r1, [r0, #0x04]       @ MPU_CTRL reg
 
+
 __exception_config:
-
-
+  
 __nvic_config:
   @ enable interrupts
 
-
 __fpu_config:
-
 
   @ return
   BX    lr
