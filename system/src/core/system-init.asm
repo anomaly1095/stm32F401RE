@@ -87,7 +87,7 @@ __flash_config:
 
   LDR   r0, =FLASH_BASE
   LDR   r1, [r0]            @ FLASH_ACR reg
-  LDR   r2, =FLASH_CFG_MASK    @ disable caches, reset caches, enable prefetch, set latency at 2WS
+  LDR   r2, =FLASH_CFG_MASK
   AND   r1, r1, r2
   STR   r1, [r0]            @ FLASH_ACR reg
   LDR   r1, [r0]            @ FLASH_ACR reg
@@ -134,8 +134,8 @@ __systick_config:
   STR   r1, [r0]            @ STK_CTRL reg
 
 __mpu_config:
-  LDR   r0, =MPU_BASE       @ Load MPU base address
-  LDR   r1, [r0]            @ Load MPU_TYPER register to check MPU type
+  LDR   r0, =MPU_BASE         @ Load MPU base address
+  LDR   r1, [r0]              @ Load MPU_TYPER register to check MPU type
 
   @ Check for DREGION bits to see if MPU supports regions
   MOVW  r2, #(0x8 << 8)       @ Prepare mask for DREGION bits
@@ -148,75 +148,82 @@ __mpu_config:
   LDREQ r1, [r0, #0x04]       @ MPU_CTRL reg
   ORREQ r1, r2                @ Set ENABLE, PRIVDEFENA, and HFNMIENA bits
   STREQ r1, [r0, #0x04]       @ MPU_CTRL reg
-  BEQ   __exception_config    @ branch out with section config
+  BEQ   __exception_config    @ branch without configuring sections
 
-  LDR   r0, =MPU_BASE
 
-  @ Configure Region 0: 0x00000000 to 0x1FFFFFFF (FLASH)
-  LDR   r1, =SECTION0_BASE      @ Load base address of Region 0
-  ORR   r1, r1, #(0 << 4) | 1   @ Region number 0, VALID bit
+  @ Configure REGION0: 0x00000000 to 0x1FFFFFFF (FLASH for kernel and apps)
+  LDR   r1, =SECTION0_BASE
+  MOVW  r2, #0b10000            @ Region number 0, VALID bit
+  STR   r2, [r0, #0x0C]         @ MPU_RBAR reg
   STR   r1, [r0, #0x0C]         @ MPU_RBAR reg
 
-  MOVW  r2, (31 << 1) | (0b001 << 24) | (0b011 << 16) | 1  @ Size: 512MB, TEX=0, C=1, B=1, S=0, AP=Full access
+  LDR   r2, =SECTION0_MASK
   STR   r2, [r0, #0x10]         @ MPU_RASR reg
 
-  @ Configure Region 1: 0x00000000 to 0x0001FFFF (Kernel FLASH)
-  LDR   r1, =SECTION1_BASE      @ Load base address of Region 1
-  ORR   r1, r1, #(1 << 4) | 1   @ Region number 1, VALID bit
+  @ Configure REGION1: 0x20000000 to 0x3FFFFFFF (SRAM)
+  LDR   r1, =SECTION1_BASE
+  MOVW  r2, #0b10001            @ Region number 1, VALID bit
+  STR   r2, [r0, #0x0C]         @ MPU_RBAR reg
   STR   r1, [r0, #0x0C]         @ MPU_RBAR reg
 
-  MOVW  r2, (16 << 1) | (0b001 << 24) | (0b011 << 16) | 1  @ Size: 128KB, TEX=0, C=1, B=1, S=0, AP=Full access
+  LDR   r2, =SECTION1_MASK
   STR   r2, [r0, #0x10]         @ MPU_RASR reg
 
-  @ Configure Region 2: 0x08000000 to 0x0801FFFF (Kernel FLASH)
-  MOV   r1, SECTION2_BASE       @ Load base address of Region 2
-  ORR   r1, r1, #(2 << 4) | 1   @ Region number 2, VALID bit
+  @ Configure REGION2: 0x20010000 to 0x20017FFF (Kernel SRAM)
+  LDR   r1, =SECTION2_BASE
+  MOVW  r2, #0b10010            @ Region number 2, VALID bit
+  STR   r2, [r0, #0x0C]         @ MPU_RBAR reg
   STR   r1, [r0, #0x0C]         @ MPU_RBAR reg
 
-  MOV   r2, (16 << 1) | (0b001 << 24) | (0b011 << 16) | 1  @ Size: 128KB, TEX=0, C=1, B=1, S=0, AP=Full access
+  LDR   r2, =SECTION2_MASK
   STR   r2, [r0, #0x10]         @ MPU_RASR reg
 
-  @ Configure Region 3: 0x20000000 to 0x3FFFFFFF (SRAM)
-  MOV   r1, SECTION3_BASE       @ Load base address of Region 3
-  ORR   r1, r1, #(3 << 4) | 1   @ Region number 3, VALID bit
+  @ Configure REGION3: 0x22200000 to 0x222FFFFF (Bit-Band Area of Kernel SRAM)
+  LDR   r1, =SECTION3_BASE
+  MOVW  r2, #0b10011            @ Region number 3, VALID bit
+  STR   r2, [r0, #0x0C]         @ MPU_RBAR reg
   STR   r1, [r0, #0x0C]         @ MPU_RBAR reg
 
-  MOV   r2, (29 << 1) | (0b001 << 24) | (0b011 << 16) | 1  @ Size: 512MB, TEX=0, C=1, B=1, S=0, AP=Full access
+  LDR   r2, =SECTION3_MASK
   STR   r2, [r0, #0x10]         @ MPU_RASR reg
 
-  @ Configure Region 4: 0x20010000 to 0x20017FFF (Kernel SRAM)
-  MOV   r1, SECTION4_BASE       @ Load base address of Region 4
-  ORR   r1, r1, #(4 << 4) | 1   @ Region number 4, VALID bit
+  @ Configure REGION4: 0x40000000 to 0x5FFFFFFF (Peripheral Registers)
+  LDR   r1, =SECTION4_BASE
+  MOVW  r2, #0b10100            @ Region number 4, VALID bit
+  STR   r2, [r0, #0x0C]         @ MPU_RBAR reg
   STR   r1, [r0, #0x0C]         @ MPU_RBAR reg
 
-  MOV   r2, (14 << 1) | (0b001 << 24) | (0b011 << 16) | 1  @ Size: 32KB, TEX=0, C=1, B=1, S=0, AP=Full access
-  STR   r2, [r0, #0x10]       @ MPU_RASR reg
+  LDR   r2, =SECTION4_MASK
+  STR   r2, [r0, #0x10]         @ MPU_RASR reg
 
-  @ Configure Region 5: 0x40000000 to 0x5FFFFFFF (Peripherals)
-  MOV   r1, SECTION5_BASE     @ Load base address of Region 5
-  ORR   r1, r1, #(5 << 4) | 1 @ Region number 5, VALID bit
-  STR   r1, [r0, #0x0C]       @ MPU_RBAR reg
+  @ Configure REGION5: 0x40026000 to 0x40026FFF (DMA Controller)
+  LDR   r1, =SECTION5_BASE
+  MOVW  r2, #0b10101            @ Region number 5, VALID bit
+  STR   r2, [r0, #0x0C]         @ MPU_RBAR reg
+  STR   r1, [r0, #0x0C]         @ MPU_RBAR reg
 
-  MOV   r2, (29 << 1) | (0b010 << 24) | (0b000 << 16) | 1  @ Size: 512MB, TEX=0, C=0, B=0, S=1, AP=Full access
-  STR   r2, [r0, #0x10]       @ MPU_RASR reg
+  LDR   r2, =SECTION5_MASK
+  STR   r2, [r0, #0x10]         @ MPU_RASR reg
 
-  @ Configure Region 6: 0xE0000000 to 0xE00FFFFF (System Peripherals)
-  MOV   r1, SECTION6_BASE     @ Load base address of Region 6
-  ORR   r1, r1, #(6 << 4) | 1 @ Region number 6, VALID bit
-  STR   r1, [r0, #0x0C]       @ MPU_RBAR reg
+  @ Configure REGION6: 0x424C0000 to 0x424DFFFF (Bit-Band Area of DMA Controller)
+  LDR   r1, =SECTION6_BASE
+  MOVW  r2, #0b10110            @ Region number 6, VALID bit
+  STR   r2, [r0, #0x0C]         @ MPU_RBAR reg
+  STR   r1, [r0, #0x0C]         @ MPU_RBAR reg
 
-  MOV   r2, (19 << 1) | (0b010 << 24) | (0b000 << 16) | 1  @ Size: 1MB, TEX=0, C=0, B=0, S=1, AP=Full access
-  STR   r2, [r0, #0x10]       @ MPU_RASR reg
+  LDR   r2, =SECTION6_MASK
+  STR   r2, [r0, #0x10]         @ MPU_RASR reg
 
-  @ Configure Region 7: 0xE0100000 to 0xFFFFFFFF (STM32 Standard Peripherals)
-  MOV   r1, SECTION7_BASE     @ Load base address of Region 7
-  ORR   r1, r1, #(7 << 4) | 1 @ Region number 7, VALID bit
-  STR   r1, [r0, #0x0C]       @ MPU_RBAR reg
+  @ Configure REGION7: 0xE0000000 to 0xE00FFFFF (System Peripheral Space)
+  LDR   r1, =SECTION7_BASE
+  MOVW  r2, #0b10111            @ Region number 7, VALID bit
+  STR   r2, [r0, #0x0C]         @ MPU_RBAR reg
+  STR   r1, [r0, #0x0C]         @ MPU_RBAR reg
 
-  MOV   r2, (30 << 1) | (0b010 << 24) | (0b000 << 16) | 1  @ Size: 511MB, TEX=0, C=0, B=0, S=1, AP=Full access
-  STR   r2, [r0, #0x10]       @ MPU_RASR reg
+  LDR   r2, =SECTION7_MASK
+  STR   r2, [r0, #0x10]         @ MPU_RASR reg
 
-
+  @ Enable background map, enable mpu during NMI AND FAULTS, enable MPU
   LDR   r1, [r0, #0x04]       @ MPU_CTRL reg
   MOV   r2, #0b111
   ORR   r1, r2                @ Set ENABLE, PRIVDEFENA, and HFNMIENA bits
@@ -229,7 +236,6 @@ __nvic_config:
   @ enable interrupts
 
 
-
 __fpu_config:
 
 
@@ -237,7 +243,7 @@ __fpu_config:
   BX    lr
 
   .size _sysinit, .-_sysinit
-@-------------------------------------------
+@-------------------------------------------------------------------------------------------------------
 
   .section .rodata.k_regs, "a", %progbits
   .equ RCC_BASE, 0x40023800
@@ -245,45 +251,63 @@ __fpu_config:
   .equ MPU_BASE, 0xE000ED90
   .equ NVIC_BASE, 0xE000E100
   .equ SYSTICK_BASE, 0xE000E010
+@-------------------------------------------------------------------------------------------------------
 
   .section .rodata.masks, "a", %progbits
-  .equ FLASH_CFG_MASK, 0b1100100000010
+  .equ FLASH_CFG_MASK, 0b1100100000010  @ disable caches, reset caches, enable prefetch, set latency at 2WS
+@-------------------------------------------------------------------------------------------------------
 
   .section .rodata.sections, "a", %progbits
 
   @----------------------------- System Peripheral Space
   .equ SECTION7_SIZE, 0x00100000    @ 1MB
   .equ SECTION7_BASE, 0xE0000000
-
+  @                     XN = 1    |   AP =  001   |  TEX =  000   |   S =  1    |   C = 0     |   B = 0     |SRD=00000000| SIZE = 19 | ENABLE 
+  .equ SECTION7_MASK, (0b1 << 28) | (0b001 << 24) | (0b000 << 19) | (0b1 << 18) | (0b0 << 17) | (0b0 << 16) | (0x0 << 8) | (19 << 1) | 0b1
+  
   @----------------------------- Bit-Band Area of DMA Controller
   .equ SECTION6_SIZE, 0x00020000    @ 128KB
   .equ SECTION6_BASE, 0x424C0000
-
+  @                     XN = 1    |   AP =  010   |  TEX =  000   |   S =  1    |   C = 0     |   B = 1     |SRD=00000000| SIZE = 16 | ENABLE 
+  .equ SECTION6_MASK, (0b1 << 28) | (0b010 << 24) | (0b000 << 19) | (0b1 << 18) | (0b0 << 17) | (0b1 << 16) | (0x0 << 8) | (16 << 1) | 0b1
+  
   @----------------------------- DMA Controller
   .equ SECTION5_SIZE, 0x00001000    @ 4KB
   .equ SECTION5_BASE, 0x40026000
+  @                     XN = 1    |   AP =  010   |  TEX =  000   |   S =  1    |   C = 0     |   B = 1     |SRD=00000000| SIZE = 11 | ENABLE 
+  .equ SECTION5_MASK, (0b1 << 28) | (0b010 << 24) | (0b000 << 19) | (0b1 << 18) | (0b0 << 17) | (0b1 << 16) | (0x0 << 8) | (11 << 1) | 0b1
 
   @----------------------------- Peripheral Registers
   .equ SECTION4_SIZE, 0x20000000    @ 512MB
   .equ SECTION4_BASE, 0x40000000
+  @                     XN = 1    |   AP =  011   |  TEX =  000   |   S =  1    |   C = 0     |   B = 1     |SRD=00000000| SIZE = 28 | ENABLE 
+  .equ SECTION4_MASK, (0b1 << 28) | (0b011 << 24) | (0b000 << 19) | (0b1 << 18) | (0b0 << 17) | (0b1 << 16) | (0x0 << 8) | (28 << 1) | 0b1
 
   @----------------------------- Bit-Band Area of KERNEL SRAM
   .equ SECTION3_SIZE, 0x00100000    @ 1MB
   .equ SECTION3_BASE, 0x22200000
+  @                     XN = 1    |   AP =  001   |  TEX =  001   |   S =  0    |   C = 0     |   B = 0     |SRD=00000000| SIZE = 19 | ENABLE 
+  .equ SECTION3_MASK, (0b1 << 28) | (0b001 << 24) | (0b001 << 19) | (0b0 << 18) | (0b0 << 17) | (0b0 << 16) | (0x0 << 8) | (19 << 1) | 0b1
 
   @----------------------------- KERNEL SRAM
   .equ SECTION2_SIZE, 0x00008000    @ 32KB
   .equ SECTION2_BASE, 0x20010000
+  @                     XN = 0    |   AP =  001   |  TEX =  001   |   S =  0    |   C = 1     |   B = 1     |SRD=00000000| SIZE = 14 | ENABLE 
+  .equ SECTION2_MASK, (0b0 << 28) | (0b001 << 24) | (0b001 << 19) | (0b0 << 18) | (0b1 << 17) | (0b1 << 16) | (0x0 << 8) | (14 << 1) | 0b1
 
   @----------------------------- SRAM
   .equ SECTION1_SIZE, 0x20000000    @ 512MB
   .equ SECTION1_BASE, 0x20000000
+  @                     XN = 1    |   AP =  011   |  TEX =  000   |   S =  1    |   C = 1     |   B = 0     |SRD=00000000| SIZE = 28 | ENABLE 
+  .equ SECTION1_MASK, (0b1 << 28) | (0b011 << 24) | (0b000 << 19) | (0b1 << 18) | (0b1 << 17) | (0b0 << 16) | (0x0 << 8) | (28 << 1) | 0b1
 
   @----------------------------- FLASH for kernel and apps
   .equ SECTION0_SIZE, 0x20000000    @ 512MB
   .equ SECTION0_BASE, 0x00000000
+  @                     XN = 0    |   AP =  010   |  TEX =  000   |   S =  1    |   C = 1     |   B = 0     |SRD=00000000| SIZE = 28 | ENABLE 
+  .equ SECTION0_MASK, (0b0 << 28) | (0b010 << 24) | (0b000 << 19) | (0b1 << 18) | (0b1 << 17) | (0b0 << 16) | (0x0 << 8) | (28 << 1) | 0b1
 
-@-------------------------------------------
+@-------------------------------------------------------------------------------------------------------
   
   .section .rodata.keys, "a", %progbits
   @ no read no write section
