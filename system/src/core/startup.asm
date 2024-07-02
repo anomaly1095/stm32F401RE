@@ -337,7 +337,7 @@ _default_handler:
 _reset_handler:
   LDR   sp, =_msp
 
-@ copy kernel .data section from FLASH to SRAM
+  @ copy kernel .data section from FLASH to SRAM
   LDR   r0, =_si_k_data
   LDR   r1, =_s_k_data
   LDR   r2, =_e_k_data
@@ -347,21 +347,45 @@ __copy_k_data:
   STRNE r3, [r1], #0x04
   BNE   __copy_data
 
-@ initialize kernel .bss section with zeross
+  @ initialize kernel .bss section with zeross
   LDR   r0, =_s_k_bss
   LDR   r1, =_e_k_bss
   MOV   r2, #0
 __zero_k_bss:
   CMP   r0, r1
   STRNE r2, [r0], #4
-  BNE   __zero_bss
+  BNE   __zero_k_bss
 
   @ transition to system initialization
   BL    _sysinit
 
-  @ app initialization
-  BL    _appinit
+@ APP INITIALIZATION SECTION
+  @ copy app .data section from FLASH to SRAM
+  LDR   r0, =_si_app_data
+  LDR   r1, =_s_app_data
+  LDR   r2, =_e_app_data
+__copy_app_data:
+  CMP   r1, r2
+  LDRNE r3, [r0], #0x04
+  STRNE r3, [r1], #0x04
+  BNE   __copy_data
 
+  @ initialize app .bss section with zeros
+  LDR   r0, =_s_app_bss
+  LDR   r1, =_e_app_bss
+  MOV   r2, #0
+__zero_app_bss:
+  CMP   r0, r1
+  STRNE r2, [r0], #4
+  BNE   __zero_app_bss
+
+  @ set sp to PSP
+  MOVW  r2, #0b10
+  ORR   control, control, r2
+  LDR   sp, =_psp
+  @ set execution mode to unprivileged thumb mode
+  MOVW  r2, #0b011
+  ORR   control, control, r2
   @ branch to application firmware
   BL    _start
 
@@ -373,8 +397,13 @@ __zero_k_bss:
 @-------------------------------------------
 
   .section .rodata, "a", %progbits
-  .word _si_k_data @ start of kernel .data section in FLASH
-  .word _s_k_data  @ start of kernel .data section in SRAM
-  .word _e_k_data  @ end   of kernel .data section in SRAM
-  .word _s_k_bss   @ start of kernel .bss  section in SRAM
-  .word _e_k_bss   @ end   of kernel .bss  section in SRAM
+  .word _si_k_data   @ start of kernel .data section in FLASH
+  .word _s_k_data    @ start of kernel .data section in SRAM
+  .word _e_k_data    @ end   of kernel .data section in SRAM
+  .word _s_k_bss     @ start of kernel .bss  section in SRAM
+  .word _e_k_bss     @ end   of kernel .bss  section in SRAM
+  .word _si_app_data @ start of kernel .data section in FLASH
+  .word _s_app_data  @ start of app    .data section in SRAM
+  .word _e_app_data  @ end   of app    .data section in SRAM
+  .word _s_app_bss   @ start of app    .bss  section in SRAM
+  .word _e_app_bss   @ end   of app    .bss  section in SRAM

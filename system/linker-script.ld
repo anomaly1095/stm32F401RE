@@ -49,7 +49,7 @@ SECTIONS
   .k_rodata : 
   {
     ALIGN(4);
-    *(.rodata.k_regs)
+    *(.rodata.sys_regs)
     *(.rodata.masks)
     *(.rodata.keys)
     ALIGN(4);

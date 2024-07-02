@@ -20,7 +20,7 @@ __hsi_wait:
   LDR   r1, [r0]            @ PLL_CR reg
   TST   r1, r2
   BEQ   __hsi_wait          @ wait for hsi te be enabled
-
+      
 __pwr_config:
   @ set VOS bits to 0x10 (power scale 2)
   @ set DBP to enable write access to RTC registers
@@ -85,7 +85,6 @@ __check_hash:
 
 
 __flash_config:
-
   LDR   r0, =FLASH_BASE
   LDR   r1, [r0]            @ FLASH_ACR reg
   LDR   r2, =FLASH_CFG_MASK
@@ -245,21 +244,20 @@ __mpu_config:
   ORR   r1, r2                @ Set ENABLE, PRIVDEFENA, and HFNMIENA bits
   STR   r1, [r0, #0x04]       @ MPU_CTRL reg
 
-
 __exception_config:
   
 __nvic_config:
-  @ enable interrupts
 
 __fpu_config:
 
   @ return
-  BX    lr
+  BX    r14
 
   .size _sysinit, .-_sysinit
 @-------------------------------------------------------------------------------------------------------
 
-  .section .rodata.k_regs, "a", %progbits
+  .section .rodata.sys_regs, "a", %progbits
+  .global RCC_BASE
   .equ RCC_BASE, 0x40023800
   .equ FLASH_BASE, 0x40023C00
   .equ MPU_BASE, 0xE000ED90
