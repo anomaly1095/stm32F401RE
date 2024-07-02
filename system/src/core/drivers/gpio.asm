@@ -4,108 +4,75 @@
 
 @-------------------------------------------------------------------
 @ resets gpio port
-@ assumes r1, contains port to be reset: "A", "B", "C", "D", "E", "H"
+@ assumes r1 contains port to be reset: "A", "B", "C", "D", "E", "H"
 @-------------------------------------------------------------------
-  .global _gpio_port_reset
+.global _gpio_port_reset
 _gpio_port_reset:
   LDR   r0, =RCC_BASE
-  LDR   r1, [r0, #0x10] @ RCC_AHB1RST reg
-  CMP   r1, #0x41       @ "A"
-  BEQ     __resetA
-  CMP   r1, #0x42       @ "B"
-  BEQ     __resetB
-  CMP   r1, #0x43       @ "C"
-  BEQ     __resetC
-  CMP   r1, #0x44       @ "D"
-  BEQ     __resetD
-  CMP   r1, #0x45       @ "E"
-  BEQ     __resetE
-  CMP   r1, #0x48       @ "H"
-  BEQ     __resetH
-  BX    r14             @ return on failure
-__resetA:
-  MOV   r2, #0b1
-  ORR   r1, r1, r2
-  STR   r1, [r0, #0x10] @ RCC_AHB1RST reg
-  BX    r14             @ return
-__resetB:
-  MOV   r2, #(0b1 << 1)
-  ORR   r1, r1, r2
-  STR   r1, [r0, #0x10] @ RCC_AHB1RST reg
-  BX    r14             @ return
-__resetC:
-  MOV   r2, #(0b1 << 2)
-  ORR   r1, r1, r2
-  STR   r1, [r0, #0x10] @ RCC_AHB1RST reg
-  BX    r14             @ return
-__resetD:
-  MOV   r2, #(0b1 << 3)
-  ORR   r1, r1, r2
-  STR   r1, [r0, #0x10] @ RCC_AHB1RST reg
-  BX    r14             @ return
-__resetE:
-  MOV   r2, #(0b1 << 4)
-  ORR   r1, r1, r2
-  STR   r1, [r0, #0x10] @ RCC_AHB1RST reg
-  BX    r14             @ return
-__resetH:
-  MOV   r2, #(0b1 << 7)
-  ORR   r1, r1, r2
-  STR   r1, [r0, #0x10] @ RCC_AHB1RST reg
-  BX    r14             @ return
-  .size _gpio_port_reset, .-_gpio_port_reset
+  LDR   r2, [r0, #0x10]   @ RCC_AHB1RST reg
+
+  CMP   r1, #0x41         @ "A"
+  MOV   r3, #0b1
+  BEQ   __reset_port
+  CMP   r1, #0x42         @ "B"
+  MOV   r3, #(0b1 << 1)
+  BEQ   __reset_port
+  CMP   r1, #0x43         @ "C"
+  MOV   r3, #(0b1 << 2)
+  BEQ   __reset_port
+  CMP   r1, #0x44         @ "D"
+  MOV   r3, #(0b1 << 3)
+  BEQ   __reset_port
+  CMP   r1, #0x45         @ "E"
+  MOV   r3, #(0b1 << 4)
+  BEQ   __reset_port
+  CMP   r1, #0x48         @ "H"
+  MOV   r3, #(0b1 << 7)
+  BEQ   __reset_port
+
+  BX    r14               @ return on failure
+
+__reset_port:
+  ORR   r2, r2, r3        @ Set the reset bit for the selected port
+  STR   r2, [r0, #0x10]   @ Write back to RCC_AHB1RST reg
+  BX    r14               @ return
+.size _gpio_port_reset, .-_gpio_port_reset
+
 @-------------------------------------------------------------------
 @ enables gpio port's clock
-@ assumes r1, contains port to be enabled: "A", "B", "C", "D", "E", "H"
+@ assumes r1 contains port to be enabled: "A", "B", "C", "D", "E", "H"
 @-------------------------------------------------------------------
-  .global _gpio_port_enable
+.global _gpio_port_enable
 _gpio_port_enable:
   LDR   r0, =RCC_BASE
-  LDR   r1, [r0, #0x30] @ RCC_AHB1ENR
-  CMP   r1, #0x41       @ "A"
-  BEQ     __enableA
-  CMP   r1, #0x42       @ "B"
-  BEQ     __enableB
-  CMP   r1, #0x43       @ "C"
-  BEQ     __enableC
-  CMP   r1, #0x44       @ "D"
-  BEQ     __enableD
-  CMP   r1, #0x45       @ "E"
-  BEQ     __enableE
-  CMP   r1, #0x48       @ "H"
-  BEQ     __enableH
-  BX    r14             @ return
-__enableA:
-  MOV   r2, #0b1
-  ORR   r1, r1, r2
-  STR   r1, [r0, #0x30] @ RCC_AHB1ENR reg
-  BX    r14             @ return
-__enableB:
-  MOV   r2, #(0b1 << 1)
-  ORR   r1, r1, r2
-  STR   r1, [r0, #0x30] @ RCC_AHB1ENR reg
-  BX    r14             @ return
-__enableC:
-  MOV   r2, #(0b1 << 2)
-  ORR   r1, r1, r2
-  STR   r1, [r0, #0x30] @ RCC_AHB1ENR reg
-  BX    r14
-__enableD:
-  MOV   r2, #(0b1 << 3)
-  ORR   r1, r1, r2
-  STR   r1, [r0, #0x30] @ RCC_AHB1ENR reg
-  BX    r14             @ return
-__enableE:
-  MOV   r2, #(0b1 << 4)
-  ORR   r1, r1, r2
-  STR   r1, [r0, #0x30] @ RCC_AHB1ENR reg
-  BX    r14             @ return
-__enableH:
-  MOV   r2, #(0b1 << 7)
-  ORR   r1, r1, r2
-  STR   r1, [r0, #0x30] @ RCC_AHB1ENR reg
-  BX    r14             @ return
-  .size _gpio_port_enable, .-_gpio_port_enable
+  LDR   r2, [r0, #0x30]   @ RCC_AHB1ENR reg
+
+  CMP   r1, #0x41         @ "A"
+  MOV   r3, #0b1
+  BEQ   __enable_common
+  CMP   r1, #0x42         @ "B"
+  MOV   r3, #(0b1 << 1)
+  BEQ   __enable_common
+  CMP   r1, #0x43         @ "C"
+  MOV   r3, #(0b1 << 2)
+  BEQ   __enable_common
+  CMP   r1, #0x44         @ "D"
+  MOV   r3, #(0b1 << 3)
+  BEQ   __enable_common
+  CMP   r1, #0x45         @ "E"
+  MOV   r3, #(0b1 << 4)
+  BEQ   __enable_common
+  CMP   r1, #0x48         @ "H"
+  MOV   r3, #(0b1 << 7)
+  BEQ   __enable_common
+
+  BX    r14               @ return on failure
+
+__enable_common:
+  ORR   r2, r2, r3        @ Set the enable bit for the selected port
+  STR   r2, [r0, #0x30]   @ Write back to RCC_AHB1ENR reg
+  BX    r14               @ return
+.size _gpio_port_enable, .-_gpio_port_enable
 
 @-------------------------------------------------------------------
 @ sets pin mode: (input/output/AF/Analog)
@@ -116,30 +83,30 @@ __enableH:
   .global _set_pinmode
 _set_pinmode:
   MULS  r3, r3, #2        @ Calculate the register bit offset for the pin number
-  CMP   r1, #0x41
-  ITE   EQ
-  LDREQ r0, =GPIOA_BASE
+  CMP   r1, #0x41         @ "A"
+  ITT   EQ
+  LDR   r0, =GPIOA_BASE
   BEQ   __check_pinmode
-  CMP   r1, #0x42
-  ITE   EQ
-  LDREQ r0, =GPIOB_BASE
+  CMP   r1, #0x42         @ "B"
+  ITT   EQ
+  LDR   r0, =GPIOB_BASE
   BEQ   __check_pinmode
-  CMP   r1, #0x43
-  ITE   EQ
-  LDREQ r0, =GPIOC_BASE
-  BEQ   __check_pinmode
-  CMP   r1, #0x44
-  ITE   EQ
-  LDREQ r0, =GPIOD_BASE
-  BEQ   __check_pinmode
-  CMP   r1, #0x45
-  ITE   EQ
-  LDREQ r0, =GPIOE_BASE
-  BEQ   __check_pinmode
-  CMP   r1, #0x48
-  ITE   EQ
-  LDREQ r0, =GPIOH_BASE
-  BEQ   __check_pinmode
+  CMP   r1, #0x43         @ "C"
+  ITT   EQ
+  LDR   r0, =GPIOC_BASE
+  B     __check_pinmode
+  CMP   r1, #0x44         @ "D"
+  ITT   EQ
+  LDR   r0, =GPIOD_BASE
+  B     __check_pinmode
+  CMP   r1, #0x45         @ "E"
+  ITT   EQ
+  LDR   r0, =GPIOE_BASE
+  B     __check_pinmode
+  CMP   r1, #0x48         @ "H"
+  ITT   EQ
+  LDR   r0, =GPIOH_BASE
+  B     __check_pinmode
   BX    r14               @ return on failure
 
 __check_pinmode:
@@ -197,30 +164,30 @@ __set_pin_anlg:
 @-------------------------------------------------------------------
   .global _set_out_type
 _set_out_type:
-  CMP   r1, #0x41
-  ITE   EQ
-  LDREQ r0, =GPIOA_BASE
+  CMP   r1, #0x41         @ "A"
+  ITT   EQ
+  LDR   r0, =GPIOA_BASE
+  B     __set_otype
+  CMP   r1, #0x42         @ "B"
+  ITT   EQ
+  LDR   r0, =GPIOB_BASE
+  B     __set_otype
+  CMP   r1, #0x43         @ "C"
+  ITT   EQ
+  LDR   r0, =GPIOC_BASE
   BEQ   __set_otype
-  CMP   r1, #0x42
-  ITE   EQ
-  LDREQ r0, =GPIOB_BASE
-  BEQ   __set_otype
-  CMP   r1, #0x43
-  ITE   EQ
-  LDREQ r0, =GPIOC_BASE
-  BEQ   __set_otype
-  CMP   r1, #0x44
-  ITE   EQ
-  LDREQ r0, =GPIOD_BASE
-  BEQ   __set_otype
-  CMP   r1, #0x45
-  ITE   EQ
-  LDREQ r0, =GPIOE_BASE
-  BEQ   __set_otype
-  CMP   r1, #0x48
-  ITE   EQ
-  LDREQ r0, =GPIOH_BASE
-  BEQ   __set_otype
+  CMP   r1, #0x44         @ "D"
+  ITT   EQ
+  LDR   r0, =GPIOD_BASE
+  B     __set_otype
+  CMP   r1, #0x45         @ "E"
+  ITT   EQ
+  LDR   r0, =GPIOE_BASE
+  B     __set_otype
+  CMP   r1, #0x48         @ "H"
+  ITT   EQ
+  LDR   r0, =GPIOH_BASE
+  B     __set_otype
   BX    r14               @ return on failure
 
 __set_o_type:
@@ -228,11 +195,11 @@ __set_o_type:
   MOV   r4, #0b1          @ mask
   LSL   r4, r4, r3        @ shift to pin position
   CMP   r2, #0x50         @ push-pull 
-  IT   EQ
-  BICEQ r1, r1, r2        @ clear bit to make it push-pull
+  IT    EQ
+  BIC   r1, r1, r2        @ clear bit to make it push-pull
   CMP   r2, #0x4F         @ open-drain 
   IT    EQ
-  ORREQ r1, r1, r2        @ set bit to make it open-drain
+  ORR   r1, r1, r2        @ set bit to make it open-drain
   STR   r1, [r0, #0x04]   @ GPIOx_TYPER reg
   BX    r14
   .size _set_out_type, .-_set_out_type
@@ -244,30 +211,30 @@ __set_o_type:
 @-------------------------------------------------------------------
 _set_out_speed:
   MULS  r3, r3, #2        @ Calculate the register bit offset for the pin number
-  CMP   r1, #0x41
-  ITE   EQ
-  LDREQ r0, =GPIOA_BASE
-  BEQ   __set_ospeed
-  CMP   r1, #0x42
-  ITE   EQ
-  LDREQ r0, =GPIOB_BASE
-  BEQ   __set_ospeed
-  CMP   r1, #0x43
-  ITE   EQ
-  LDREQ r0, =GPIOC_BASE
-  BEQ   __set_ospeed
-  CMP   r1, #0x44
-  ITE   EQ
-  LDREQ r0, =GPIOD_BASE
-  BEQ   __set_ospeed
-  CMP   r1, #0x45
-  ITE   EQ
-  LDREQ r0, =GPIOE_BASE
-  BEQ   __set_ospeed
-  CMP   r1, #0x48__set_olowspeed:
-  ITE   EQ
-  LDREQ r0, =GPIOH_BASE
-  BEQ   __set_ospeed
+  CMP   r1, #0x41         @ "A"
+  ITT   EQ
+  LDR   r0, =GPIOA_BASE
+  B     __set_ospeed
+  CMP   r1, #0x42         @ "B"
+  ITT   EQ
+  LDR   r0, =GPIOB_BASE
+  B     __set_ospeed
+  CMP   r1, #0x43         @ "C"
+  ITT   EQ
+  LDR   r0, =GPIOC_BASE
+  B     __set_ospeed
+  CMP   r1, #0x44         @ "D"
+  ITT   EQ
+  LDR   r0, =GPIOD_BASE
+  B     __set_ospeed
+  CMP   r1, #0x45         @ "E"
+  ITT   EQ
+  LDR   r0, =GPIOE_BASE
+  B     __set_ospeed
+  CMP   r1, #0x48         @ "H"
+  ITT   EQ
+  LDR   r0, =GPIOH_BASE
+  B     __set_ospeed
   BX    r14               @ return on failure
 
 __set_o_speed:
@@ -312,30 +279,30 @@ __set_o_vhigh_speed:
 @-------------------------------------------------------------------
 _set_pull_updown:
   MULS  r3, r3, #2        @ Calculate the register bit offset for the pin number
-  CMP   r1, #0x41
-  ITE   EQ
-  LDREQ r0, =GPIOA_BASE
-  BEQ   __set_pupd
-  CMP   r1, #0x42
-  ITE   EQ
-  LDREQ r0, =GPIOB_BASE
-  BEQ   __set_pupd
-  CMP   r1, #0x43
-  ITE   EQ
-  LDREQ r0, =GPIOC_BASE
-  BEQ   __set_pupd
-  CMP   r1, #0x44
-  ITE   EQ
-  LDREQ r0, =GPIOD_BASE
-  BEQ   __set_pupd
-  CMP   r1, #0x45
-  ITE   EQ
-  LDREQ r0, =GPIOE_BASE
-  BEQ   __set_pupd
-  CMP   r1, #0x48  
-  ITE   EQ
-  LDREQ r0, =GPIOH_BASE
-  BEQ   __set_pupd
+  CMP   r1, #0x41         @ "A"
+  ITT   EQ
+  LDR   r0, =GPIOA_BASE
+  B     __set_pupd
+  CMP   r1, #0x42         @ "B"
+  ITT   EQ
+  LDR   r0, =GPIOB_BASE
+  B     __set_pupd
+  CMP   r1, #0x43         @ "C"
+  ITT   EQ
+  LDR   r0, =GPIOC_BASE
+  B     __set_pupd
+  CMP   r1, #0x44         @ "D"
+  ITT   EQ
+  LDR   r0, =GPIOD_BASE
+  B     __set_pupd
+  CMP   r1, #0x45         @ "E"
+  ITT   EQ
+  LDR   r0, =GPIOE_BASE
+  B     __set_pupd
+  CMP   r1, #0x48         @ "H"
+  ITT   EQ
+  LDR   r0, =GPIOH_BASE
+  B     __set_pupd
   BX    r14               @ return on failure
 
 __set_pupd:
@@ -346,32 +313,173 @@ __set_pupd:
 
   CMP   r2, #0x4E         @ no pull-up no pull-down
   ITT   EQ
-  STREQ r1, [r0, #0x0C]   @ GPIOx_PUPDR reg
-  BXEQ  r14               @ return
+  STR   r1, [r0, #0x0C]   @ GPIOx_PUPDR reg
+  BX    r14               @ return
   
   CMP   r2, #0x55         @ pull-up
-  ITTEE EQ
-  MOVEQ r2, #0b01
-  ORREQ r1, r1, r2        @ set bits
-  STREQ r1, [r0, #0x0C]   @ GPIOx_PUPDR reg
-  BXEQ  r14               @ return
+  ITT   EQ
+  MOV   r2, #0b01
+  ORR   r1, r1, r2        @ set bits
+  ITT   EQ
+  STR   r1, [r0, #0x0C]   @ GPIOx_PUPDR reg
+  BX    r14               @ return
 
   CMP   r2, #0x44         @ pull-down
-  ITTEE EQ
-  MOVEQ r2, #0b10
-  ORREQ r1, r1, r2        @ set bits
-  STREQ r1, [r0, #0x0C]   @ GPIOx_PUPDR reg
+  ITT   EQ
+  MOV   r2, #0b10
+  ORR   r1, r1, r2        @ set bits
+  IT    EQ
+  STR   r1, [r0, #0x0C]   @ GPIOx_PUPDR reg
   BX    r14               @ return
   .size _set_pull_updown, .-_set_pull_updown
+
 @-------------------------------------------------------------------
 @ reads pin input data
 @ assumes r1, contains port to be reset: "A", "B", "C", "D", "E", "H"
 @ assumes r2, contains pin number
+@ function will write the value of data (0 or 1) in r3
 @-------------------------------------------------------------------
-_get_pin_value:
+_get_input_data:
+  CMP   r1, #0x41         @ "A"
+  ITT   EQ
+  LDR   r0, =GPIOA_BASE
+  B     __get_input_d
+  CMP   r1, #0x42         @ "B"
+  ITT   EQ
+  LDR   r0, =GPIOB_BASE
+  B     __get_input_d
+  CMP   r1, #0x43         @ "C"
+  ITT   EQ
+  LDR   r0, =GPIOC_BASE
+  B     __get_input_d
+  CMP   r1, #0x44         @ "D"
+  ITT   EQ
+  LDR   r0, =GPIOD_BASE
+  B     __get_input_d
+  CMP   r1, #0x45         @ "E"
+  ITT   EQ
+  LDR   r0, =GPIOE_BASE
+  B     __get_input_d
+  CMP   r1, #0x48         @ "H"
+  ITT   EQ
+  LDR   r0, =GPIOH_BASE
+  B     __get_input_d
+  BX    r14               @ return on failure
 
-  
+__get_input_d:
+  LDR   r1, [r0, #0x14]
+  MOV   r3, #0b1
+  LSL   r3, r3, r2        @ set mask at bit position
+  TST   r1, r3
+  ITE   EQ
+  MOV   r3, #0            @ input = 0
+  MOV   r3, #1            @ input = 1
+  BX    r14
   .size _get_pin_value, .-_get_pin_value
+
+@-------------------------------------------------------------------
+@ writes output data to pin
+@ assumes r1, contains port to be reset: "A", "B", "C", "D", "E", "H"
+@ assumes r2, contains pin number
+@ assumes r3 will contain the value of data to be written (0 or 1)
+@-------------------------------------------------------------------
+_set_output_data:
+  CMP   r1, #0x41         @ "A"
+  ITT   EQ
+  LDR   r0, =GPIOA_BASE
+  B     __set_output_d
+  CMP   r1, #0x42         @ "B"
+  ITT   EQ
+  LDR   r0, =GPIOB_BASE
+  B     __set_output_d
+  CMP   r1, #0x43         @ "C"
+  ITT   EQ
+  LDR   r0, =GPIOC_BASE
+  B     __set_output_d
+  CMP   r1, #0x44         @ "D"
+  ITT   EQ  
+  LDR   r0, =GPIOD_BASE
+  B     __set_output_d
+  CMP   r1, #0x45         @ "E"
+  ITT   EQ
+  LDR   r0, =GPIOE_BASE
+  B     __set_output_d
+  CMP   r1, #0x48         @ "H"
+  ITT   EQ
+  LDR   r0, =GPIOH_BASE
+  B     __set_output_d
+  BX    r14               @ return on failure
+__set_output_d:
+  LDR   r1, [r0, #0x18]   @ GPIOx_BSSR reg 
+  CMP   r3, #0b1
+  ITEE  EQ
+  LSL   r3, r3, r2
+  MULS  r2, r2, #2
+  LSL   r3, r3, r2
+  STR   r3, [r0, #0x18]   @ GPIOx_BSSR reg
+  .size _set_pin_value, .-_set_pin_value
+
+@-------------------------------------------------------------------
+@ select alternate function for pin
+@ assumes r1, contains port to be reset: "A", "B", "C", "D", "E", "H"
+@ assumes r2, contains pin number
+@ assumes r3 contains the alternate function number (0..15)
+@-------------------------------------------------------------------
+_select_af:
+  CMP   r1, #0x41         @ "A"
+  ITT   EQ
+  LDR   r0, =GPIOA_BASE
+  B     __sel_af
+  CMP   r1, #0x42         @ "B"
+  ITT   EQ
+  LDR   r0, =GPIOB_BASE
+  B     __sel_af
+  CMP   r1, #0x43         @ "C"
+  ITT   EQ
+  LDR   r0, =GPIOC_BASE
+  B     __sel_af
+  CMP   r1, #0x44         @ "D"
+  ITT   EQ
+  LDR   r0, =GPIOD_BASE
+  B     __sel_af
+  CMP   r1, #0x45         @ "E"
+  ITT   EQ
+  LDR   r0, =GPIOE_BASE
+  B     __sel_af
+  CMP   r1, #0x48         @ "H"
+  ITT   EQ
+  LDR   r0, =GPIOH_BASE
+  B     __sel_af
+  BX    r14               @ return on failure
+
+__sel_af:
+  MOVW  r4, #1111          @ Initialize mask for setting bits
+  CMP   r2, #8             @ Check if pin number is >= 8
+  BGE   __sel_af_high      @ Branch to high register handling if true
+
+  @ Low register for AFRL (0 --> 7)
+  LDR   r1, [r0, #0x20]    @ Load GPIOx_AFRL
+  MUL   r2, r2, #4         @ Calculate bit offset
+  LSL   r3, r3, r2         @ Shift alternate function number to position
+  LSL   r4, r4, r2         @ Create mask for clearing bits
+  BIC   r1, r1, r4         @ Clear existing bits
+  ORR   r1, r1, r3         @ Set new alternate function bits
+  STR   r1, [r0, #0x20]    @ Store updated GPIOx_AFRL
+  BX    r14                @ Return
+
+__sel_af_high:
+  @ High register for AFRH (8 --> 15)
+  LDR   r1, [r0, #0x24]    @ Load GPIOx_AFRH
+  SUB   r2, r2, #8         @ Normalize pin number to start at 0 (not 8)
+  MUL   r2, r2, #4         @ Calculate bit offset
+  LSL   r3, r3, r2         @ Shift alternate function number to position
+  LSL   r4, r4, r2         @ Create mask for clearing bits
+  BIC   r1, r1, r4         @ Clear existing bits
+  ORR   r1, r1, r3         @ Set new alternate function bits
+  STR   r1, [r0, #0x24]    @ Store updated GPIOx_AFRH
+  BX    r14                @ Return
+
+  .size _select_af, .-_select_af
 
   .section .rodata.st_periphs, %progbits
   .extern RCC_BASE
