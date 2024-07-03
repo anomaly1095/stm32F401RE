@@ -87,7 +87,7 @@ __check_hash:
 __flash_config:
   LDR   r0, =FLASH_BASE
   LDR   r1, [r0]            @ FLASH_ACR reg
-  LDR   r2, =FLASH_CFG_MASK
+  MOVW  r2, 0b1100100000010  @ disable caches, reset caches, enable prefetch, set latency at 2WS
   AND   r1, r1, r2
   STR   r1, [r0]            @ FLASH_ACR reg
   LDR   r1, [r0]            @ FLASH_ACR reg
@@ -258,15 +258,14 @@ __fpu_config:
 
   .section .rodata.sys_regs, "a", %progbits
   .global RCC_BASE
+  .global SYSCFG_BASE
   .equ RCC_BASE, 0x40023800
   .equ FLASH_BASE, 0x40023C00
+  .equ SYSCFG_BASE, 0x40013800
   .equ MPU_BASE, 0xE000ED90
   .equ NVIC_BASE, 0xE000E100
   .equ SYSTICK_BASE, 0xE000E010
-@-------------------------------------------------------------------------------------------------------
 
-  .section .rodata.masks, "a", %progbits
-  .equ FLASH_CFG_MASK, 0b1100100000010  @ disable caches, reset caches, enable prefetch, set latency at 2WS
 @-------------------------------------------------------------------------------------------------------
 
   .section .rodata.sections, "a", %progbits

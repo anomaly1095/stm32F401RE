@@ -40,8 +40,9 @@ SECTIONS
   .k_text :
   {
     ALIGN(4);
-    *(._reset_handler)
-    *(_sysinit)
+    *(.text._reset_handler)
+    *(.text._sysinit)
+    *(.text.drivers)
     ALIGN(4);
   } > K_FLASH
 
@@ -50,6 +51,7 @@ SECTIONS
   {
     ALIGN(4);
     *(.rodata.sys_regs)
+    *(.rodata.st_periphs)
     *(.rodata.masks)
     *(.rodata.keys)
     ALIGN(4);
