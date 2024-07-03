@@ -2,11 +2,12 @@
 .cpu cortex-m4
 .fpu fpv4-sp-d16
 .thumb
-@-------------------------------------------
-
+@----------------------------------------------
   .section .text.sysinit, "ax", %progbits
   .type _sysinit, %function
   .global _sysinit
+@-------------------------------------------
+
 _sysinit:
   @ enable HSI 16Mhz 
   LDR   r0, =RCC_BASE
@@ -255,13 +256,18 @@ __fpu_config:
 
   .size _sysinit, .-_sysinit
 @-------------------------------------------------------------------------------------------------------
-
-  .section .rodata.sys_regs, "a", %progbits
+@---------------------------------------------- registers for stm peripherals 
+  .section .rodata.st_regs, "a", %progbits
   .global RCC_BASE
   .global SYSCFG_BASE
   .equ RCC_BASE, 0x40023800
   .equ FLASH_BASE, 0x40023C00
   .equ SYSCFG_BASE, 0x40013800
+
+@-------------------------------------------------------------------------------------------------------
+
+@---------------------------------------------- registers for core system periphs 
+  .section .rodata.sys_regs, "a", %progbits
   .equ MPU_BASE, 0xE000ED90
   .equ NVIC_BASE, 0xE000E100
   .equ SYSTICK_BASE, 0xE000E010
@@ -319,8 +325,11 @@ __fpu_config:
   .equ SECTION0_MASK, (0b0 << 28) | (0b010 << 24) | (0b000 << 19) | (0b1 << 18) | (0b1 << 17) | (0b0 << 16) | (0x0 << 8) | (28 << 1) | 0b1
 
 @-------------------------------------------------------------------------------------------------------
-  
+
+@----------------------------------------------
   .section .rodata.keys, "a", %progbits
+@----------------------------------------------
+
   @ no read no write section
   .equ OPTKEY1, 0x08192A3B    @ unlock Option byte write ops
   .equ OPTKEY2, 0x4C5D67F     @ unlock Option byte write ops

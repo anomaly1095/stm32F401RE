@@ -5,12 +5,14 @@
 .thumb
 
 @-------------------------------------------------------------------
-  .section .text.drivers, "ax", %progbits
+  .section .text.st_drivers, "ax", %progbits
 @-------------------------------------------------------------------
 @ resets gpio port
 @ assumes r1 contains port to be reset: "A", "B", "C", "D", "E", "H"
 @-------------------------------------------------------------------
   .global _gpio_port_reset
+  .type _gpio_port_reset, %function
+
 _gpio_port_reset:
   LDR   r0, =RCC_BASE
   LDR   r2, [r0, #0x10]   @ RCC_AHB1RST reg
@@ -46,7 +48,9 @@ __reset_port:
 @ enables gpio port's clock
 @ assumes r1 contains port to be enabled: "A", "B", "C", "D", "E", "H"
 @-------------------------------------------------------------------
-.global _gpio_port_enable
+  .global _gpio_port_enable
+  .type _gpio_port_enable, %function
+
 _gpio_port_enable:
   LDR   r0, =RCC_BASE
   LDR   r2, [r0, #0x30]   @ RCC_AHB1ENR reg
@@ -85,6 +89,7 @@ __enable_port:
 @ assumes r3, contains pin number
 @-------------------------------------------------------------------
   .global _set_pinmode
+  .type _set_pinmode, %function
 _set_pinmode:
   MOV     r4, #2
   MULS    r3, r3, r4        @ Calculate the register bit offset for the pin number
@@ -168,6 +173,8 @@ __set_pin_anlg:
 @ assumes r3, contains pin number
 @-------------------------------------------------------------------
   .global _set_pinout_type
+  .type _set_pinout_type, %function
+
 _set_pinout_type:
   CMP     r1, #0x41         @ "A"
   ITT     EQ
@@ -215,6 +222,8 @@ __set_o_type:
 @ assumes r3, contains pin number
 @-------------------------------------------------------------------
   .global _set_pinout_speed
+  .type _set_pinout_speed, %function
+
 _set_pinout_speed:
   MOV     r4, #2
   MULS    r3, r3, r4        @ Calculate the register bit offset for the pin number
@@ -285,6 +294,8 @@ __set_o_vhigh_speed:
 @ assumes r3, contains pin number
 @-------------------------------------------------------------------
   .global _set_pull_updown
+  .type _set_pull_updown, %function
+
 _set_pull_updown:
   MOV     r4, #2
   MULS    r3, r3, r4        @ Calculate the register bit offset for the pin number
@@ -349,6 +360,8 @@ __set_pupd:
 @ function will write the value of data (0 or 1) in r3
 @-------------------------------------------------------------------
   .global _get_pininput_val
+  .type _get_pininput_val, %function
+
 _get_pininput_val:
   CMP     r1, #0x41         @ "A"
   ITT     EQ
@@ -394,6 +407,8 @@ __get_pininput_val:
 @ assumes r3 will contain the value of data to be written (0 or 1)
 @-------------------------------------------------------------------
   .global _set_pinout_val
+  .type _set_pinout_val, %function
+
 _set_pinout_val:
   CMP     r1, #0x41         @ "A"
   ITT     EQ
@@ -438,6 +453,8 @@ __set_pinout_val:
 @ assumes r3 contains the alternate function number (0..15)
 @-------------------------------------------------------------------
   .global _select_af
+  .type _select_af, %function
+
 _select_af:
   CMP     r1, #0x41         @ "A"
   ITT     EQ
@@ -501,6 +518,8 @@ __sel_af_high:
 @ assumes r2, contains EXTI number (0..15) which is also pin number
 @-------------------------------------------------------------------
   .global _set_exti_0_15_config
+  .type _set_exti_0_15_config, %function
+
 _set_exti_0_15_config:
   LDR     r0, =SYSCFG_BASE
   CMP     r2, #3              @ Check register to use for this pin
@@ -529,10 +548,10 @@ __exti_0_15_config_internal:
   BX    r14                 @ Return
 
   .size _set_exti_0_15_config, .-_set_exti_0_15_config
-
+  
 @----------------------------------------------
 @----------------------------------------------
-  .section .rodata.st_periphs, "a", %progbits
+  .section .rodata.st_regs, "a", %progbits
   .extern RCC_BASE
   .extern SYSCFG_BASE
   .equ GPIOA_BASE, 0x40020000

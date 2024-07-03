@@ -3,11 +3,12 @@
 .cpu cortex-m4
 .fpu fpv4-sp-d16
 .thumb
-@-------------------------------------------
 
+@----------------------------------------------
 // system interrupt vector table for stm32F401xx
   .section .isr_vectors, "a", %progbits
   .type  g_pfnVectors, %object
+@----------------------------------------------
  
 g_pfnVectors:
   .word  _estack  
@@ -315,24 +316,24 @@ g_pfnVectors:
   .weak      SPI4_IRQHandler
   .thumb_set SPI4_IRQHandler, _default_handler
 
-
-@-------------------------------------------
-
+@----------------------------------------------
   .section .text.default_handler, "ax", %progbits
   .type _default_handler, %function
   .weak _default_handler
   .global _default_handler
+@----------------------------------------------
+
 _default_handler:
   B _default_handler
   .size _default_handler, .-_default_handler
 
 @-------------------------------------------
-
   .section .text.reset_handler, "ax", %progbits
   .type _reset_handler, %function
   .global _reset_handler
   .extern _sysinit
   .extern _start
+@----------------------------------------------
 
 _reset_handler:
   LDR   sp, =_msp
@@ -395,8 +396,9 @@ __zero_app_bss:
   .size _reset_handler, .-_reset_handler
 
 @-------------------------------------------
-
   .section .rodata, "a", %progbits
+@----------------------------------------------
+
   .word _si_k_data   @ start of kernel .data section in FLASH
   .word _s_k_data    @ start of kernel .data section in SRAM
   .word _e_k_data    @ end   of kernel .data section in SRAM

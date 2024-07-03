@@ -42,7 +42,7 @@ SECTIONS
     ALIGN(4);
     *(.text._reset_handler)
     *(.text._sysinit)
-    *(.text.drivers)
+    *(.text.k_drivers)
     ALIGN(4);
   } > K_FLASH
 
@@ -51,7 +51,6 @@ SECTIONS
   {
     ALIGN(4);
     *(.rodata.sys_regs)
-    *(.rodata.st_periphs)
     *(.rodata.masks)
     *(.rodata.keys)
     ALIGN(4);
@@ -105,7 +104,9 @@ SECTIONS
   {
     ALIGN(4);
     *(.text.main)
-    /*add sections*/
+    *(.text.st_drivers)
+    *(.text.st_interrupt_config)
+    
     *(.glue_7)         /* glue arm to thumb code */
     *(.glue_7t)        /* glue thumb to arm code */
     *(.eh_frame)
@@ -116,7 +117,7 @@ SECTIONS
   .app_rodata : 
   {
     ALIGN(4);
-    /*add sections*/
+    *(.rodata.st_regs)
     ALIGN(4);
   } > APP_FLASH
 
