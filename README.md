@@ -1,6 +1,6 @@
-# Embedded Systems Projects Portfolio
+# 
 
-Welcome to my portfolio of embedded systems projects! This repository showcases a series of projects developed using full ARM assembly for the STM32F401RE microcontroller. Each project includes custom system initialization, linker scripts, and follows a structured directory format. Below is an overview of the projects included:
+Welcome to my portfolio of embedded systems projects! This repository showcases a series of projects developed using full ARM assembly for the STM32F401RE microcontroller. Each project includes custom system initialization, linker scripts, and follows a structured directory format, drivers, clock configs, timers, and soon a full RTOS task scheduler in the system directory for the kernel. Below is an overview of the projects included:
 
 ## Projects Overview
 
