@@ -1,4 +1,5 @@
 # SYNTAX
-
-  functions start with one underscore 
-  one labels no underscore or double underscore
+  
+  c wrapper functions usable by programmers start with no underscore
+  main assembly functions start with an underscore
+  double underscore labels are not the consern of the programmer

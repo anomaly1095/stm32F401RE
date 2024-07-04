@@ -255,6 +255,7 @@ __fpu_config:
   BX    r14
 
   .size _sysinit, .-_sysinit
+
 @-------------------------------------------------------------------------------------------------------
 @---------------------------------------------- registers for stm peripherals 
   .section .rodata.st_regs, "a", %progbits
