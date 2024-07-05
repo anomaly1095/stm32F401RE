@@ -1,4 +1,14 @@
 
+
+
+.syntax unified
+  .cpu cortex-m4
+  .fpu fpv4-sp-d16
+  .thumb
+
+@-----------------------------------------------------------------
+@-----------------------------------------------------------------
+  .section .text.helpers, "ax", %progbits
 @ macro needs to be defined when the functions
 @ are going to be called by c functions 
   #define C_INTEGRATION
