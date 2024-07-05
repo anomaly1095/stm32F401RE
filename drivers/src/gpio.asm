@@ -294,12 +294,12 @@ __gpio_set_af:
   .equ GPIOE_BB, 0x42420000
   .equ GPIOH_BB, 0x42438000
   @ bit-band gpio register offsets
-  .equ GPIOx_MODER, 0x00
+  .equ GPIOx_MODER,  0x00
   .equ GPIOx_OTYPER, 0x80
-  .equ GPIOx_OSPEEDR, 0x100
-  .equ GPIOx_PUPDR, 0x180
-  .equ GPIOx_IDR, 0x200
-  .equ GPIOx_ODR, 0x280
-  .equ GPIOx_LCKR, 0x300
-  .equ GPIOx_AFRL, 0x380
-  .equ GPIOx_AFRH, 0x400
+  .equ GPIOx_OSPEEDR,0x100
+  .equ GPIOx_PUPDR,  0x180
+  .equ GPIOx_IDR,    0x200
+  .equ GPIOx_ODR,    0x280
+  .equ GPIOx_LCKR,   0x300
+  .equ GPIOx_AFRL,   0x380
+  .equ GPIOx_AFRH,   0x400
