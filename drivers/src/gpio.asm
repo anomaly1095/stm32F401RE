@@ -285,7 +285,7 @@ __gpio_set_af:
 @-----------------------------------------------------------------
 @-----------------------------------------------------------------
 @-----------------------------------------------------------------
-  .section .rodata.gpio_driver, "a", %progbits
+  .section .rodata.drivers.gpio_driver, "a", %progbits
   @ bit-band gpio port addresses
   .equ GPIOA_BB, 0x42400000
   .equ GPIOB_BB, 0x42408000

@@ -1,3 +1,9 @@
+ 
+  .syntax unified
+  .cpu cortex-m4
+  .fpu fpv4-sp-d16
+  .thumb
+  
 @----------------------------------------------
 @ System interrupt vector table for stm32F401xx
   .section .isr_vectors, "a", %progbits
