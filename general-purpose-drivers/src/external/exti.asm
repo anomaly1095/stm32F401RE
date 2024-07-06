@@ -124,6 +124,25 @@ _syscfg_rdy_comp_cell:
 
   .size _syscfg_rdy_comp_cell, .-_syscfg_rdy_comp_cell
 
+@--------------------------------------------------------
+@ enable the compensation cell and wait for it to be enabled
+  .global _syscfg_enable_comp_cell
+  .type _syscfg_enable_comp_cell, %function
+_syscfg_enable_comp_cell:
+  PUSH_R0_R2
+  LDR   r0, =SYSCFG_BASE
+  MOV   r1, 0b1
+  STR   r1, [r0, #0x20]!      @ enable the compensation cell
+  MOV   r2, #0x10
+__wait_comp_cell:
+  LDR   r1, [r0]
+  TST   r1, r2
+  BEQ   __wait_comp_cell
+  POP_R0_R2
+  BX    r14
+
+
+  .size _syscfg_enable_comp_cell, .-_syscfg_enable_comp_cell
 @-----------------------------------------------------------------
   .section .rodata.drivers.exti_driver, "a", %progbits
   .equ SYSCFG_BASE, 0x40013800

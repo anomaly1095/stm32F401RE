@@ -315,3 +315,54 @@ g_pfnVectors:
 
   .weak      SPI4_IRQHandler
   .thumb_set SPI4_IRQHandler, _default_handler
+
+@-------------------------------------------------
+  .section .text.generic_handlers, "ax", %progbits
+  .type _default_handler, %function
+  .type _reset_handler, %function
+  .global _reset_handler
+  .global _default_handler
+  .extern _start
+  .extern _sysinit
+
+_default_handler:
+  NOP
+  B     _default_handler
+  .size _default_handler, .-_default_handler
+
+_reset_handler:
+  LDR   sp, =_estack
+
+  LDR   r0, =_sidata
+  LDR   r1, =_sdata
+  LDR   r2, =_edata
+__copy_data:
+  LDR   r3, [r0], #0x04
+  CMP   r1, r2
+  ITT    NE
+  STRNE r3, [r1], #0x04
+  BNE   __copy_data
+
+  LDR   r0, =_sbss
+  LDR   r1, =_ebss
+  MOV   r2, #0
+__zero_bss:
+  CMP   r0, r1
+  ITT   NE 
+  STRNE r2, [r0], #0x04
+  BNE   __zero_bss
+
+  BL    _sysinit
+  BL    _start
+  B     _default_handler
+  .size _reset_handler, .-_reset_handler
+
+@-------------------------------------------------
+
+  .section .rodata.generic_handlers, "a", %progbits
+  .type _reset_handler, %function
+  .word _sidata
+  .word _sdata
+  .word _edata
+  .word _sbss
+  .word _ebss
