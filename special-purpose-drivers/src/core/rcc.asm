@@ -216,7 +216,7 @@ _RCC_enable_DMA2:
   BX      r14
 @---------------------------------------------------
 @ enable DMA1  
-_RCC_enbale_DMA1:
+_RCC_enable_DMA1:
   LDR     r0, =RCC_AHB1ENR_BB
   ADD     r0, r0, #84                 @ 21st bit * 4 bytes for each bit
   MOV     r1, #1

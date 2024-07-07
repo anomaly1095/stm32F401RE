@@ -6,6 +6,7 @@
   #include "../helper.asm"
 
   .section .text.drivers.usart_driver, "ax", %progbits
+_USART_config:
 
 
 @-----------------------------------------------------------------

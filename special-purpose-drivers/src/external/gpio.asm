@@ -15,7 +15,6 @@
   .global _gpio_set_moder
   .type _gpio_set_moder, %function
 _gpio_set_moder:
-  PUSH_R0_R3
   GPIO_CMP_LDR_PORT 0x41, GPIOA_BB
   BEQ     __gpio_set_moder
   GPIO_CMP_LDR_PORT 0x42, GPIOB_BB       @ compare and load gpio port B bitband address
@@ -28,7 +27,6 @@ _gpio_set_moder:
   BEQ     __gpio_set_moder
   GPIO_CMP_LDR_PORT 0x48, GPIOH_BB       @ compare and load gpio port H bitband address
   BEQ     __gpio_set_moder
-  POP_R0_R3
   BX      r14                 @ failure return
 
 __gpio_set_moder:
@@ -42,7 +40,6 @@ __gpio_set_moder:
   STR     r3, [r0, r1]!       @ set bit 0  
   LSR     r3, r2, #1          @ save bit 1 of r2 in r3 by right shifting
   STR     r3, [r0, #0x04]     @ set bit 1
-  POP_R0_R3
   BX      r14
   .size _gpio_set_moder, .-_gpio_set_moder
 
@@ -53,7 +50,6 @@ __gpio_set_moder:
   .global _gpio_set_otyper
   .type _gpio_set_otyper, %function
 _gpio_set_otyper:
-  PUSH_R0_R3
   GPIO_CMP_LDR_PORT 0x41, GPIOA_BB       @ load gpio port A bitband address
   BEQ     __gpio_set_otyper
   GPIO_CMP_LDR_PORT 0x42, GPIOB_BB       @ load gpio port B bitband address
@@ -66,8 +62,6 @@ _gpio_set_otyper:
   BEQ     __gpio_set_otyper
   GPIO_CMP_LDR_PORT 0x48, GPIOH_BB       @ load gpio port H bitband address
   BEQ     __gpio_set_otyper
-  POP_R0_R3
-  BX      r14                            @ failure return
 
 __gpio_set_otyper:
   @ calculating pin's bit offset
@@ -76,7 +70,6 @@ __gpio_set_otyper:
   LDR     r3, =GPIOx_OTYPER   @ bit-band offset for GPIOx_OTYPER
   ADD     r1, r1, r3          @ add the bitoffset to reg offset
   STR     r2, [r0, r1]        @ save the output type
-  POP_R0_R3
   BX      r14
   .size _gpio_set_otyper, .-_gpio_set_otyper
 
@@ -87,7 +80,6 @@ __gpio_set_otyper:
   .global _gpio_set_ospeeder
   .type _gpio_set_ospeeder, %function
 _gpio_set_ospeeder:
-  PUSH_R0_R3
   GPIO_CMP_LDR_PORT 0x41, GPIOA_BB       @ load gpio port A bitband address
   BEQ     __gpio_set_ospeeder
   GPIO_CMP_LDR_PORT 0x42, GPIOB_BB       @ load gpio port B bitband address
@@ -100,8 +92,6 @@ _gpio_set_ospeeder:
   BEQ     __gpio_set_ospeeder
   GPIO_CMP_LDR_PORT 0x48, GPIOH_BB       @ load gpio port H bitband address
   BEQ     __gpio_set_ospeeder
-  POP_R0_R3
-  BX      r14                 @ failure return
 __gpio_set_ospeeder:
   @ calculating pin's bit offset
   MOV     r3, #8              @ 4 bytes per bit * 2 bits per pin 
@@ -113,7 +103,6 @@ __gpio_set_ospeeder:
   STR     r3, [r0, r1]!       @ set bit 0
   LSR     r3, r2, #1          @ save bit 1 of r2 in r3 by right shifting
   STR     r3, [r0, #0x04]     @ set bit 1
-  POP_R0_R3
   BX      r14
   .size _gpio_set_ospeeder, .-_gpio_set_ospeeder
 
@@ -124,7 +113,6 @@ __gpio_set_ospeeder:
   .global _gpio_set_pupdr
   .type _gpio_set_pupdr, %function
 _gpio_set_pupdr:
-  PUSH_R0_R3
   GPIO_CMP_LDR_PORT 0x41, GPIOA_BB       @ load gpio port A bitband address
   BEQ     __gpio_set_pupdr
   GPIO_CMP_LDR_PORT 0x42, GPIOB_BB       @ load gpio port B bitband address
@@ -137,7 +125,6 @@ _gpio_set_pupdr:
   BEQ     __gpio_set_pupdr
   GPIO_CMP_LDR_PORT 0x48, GPIOH_BB       @ load gpio port H bitband address
   BEQ     __gpio_set_pupdr
-  POP_R0_R3
   BX      r14                 @ failure return
 __gpio_set_pupdr:
   @ calculating pin's bit offset
@@ -150,7 +137,6 @@ __gpio_set_pupdr:
   STR     r3, [r0, r1]!       @ set bit 0
   LSR     r3, r2, #1          @ save bit 1 of r2 in r3 by right shifting
   STR     r3, [r0, #0x04]     @ set bit 1
-  POP_R0_R3
   BX      r14
   .size _gpio_set_pupdr, .-_gpio_set_pupdr
 
@@ -161,7 +147,6 @@ __gpio_set_pupdr:
   .global _gpio_get_idr
   .type _gpio_get_idr, %function
 _gpio_get_idr:
-  PUSH_R0_R3
   GPIO_CMP_LDR_PORT 0x41, GPIOA_BB       @ load gpio port A bitband address
   BEQ     __gpio_get_idr
   GPIO_CMP_LDR_PORT 0x42, GPIOB_BB       @ load gpio port B bitband address
@@ -174,7 +159,6 @@ _gpio_get_idr:
   BEQ     __gpio_get_idr
   GPIO_CMP_LDR_PORT 0x48, GPIOH_BB       @ load gpio port H bitband address
   BEQ     __gpio_get_idr
-  POP_R0_R3
   BX      r14                 @ failure return
 __gpio_get_idr:
   @ calculating pin's bit offset
@@ -183,7 +167,6 @@ __gpio_get_idr:
   MUL     r1, r1, r3          @ mult the pin-num by the bit-offset
   ADD     r1, r1, r2          @ add the bit-offset to reg-offset
   LDR     r2, [r0, r1]        @ get bit
-  POP_R0_R3
   BX      r14
   .size _gpio_get_idr, .-_gpio_get_idr
 
@@ -194,7 +177,6 @@ __gpio_get_idr:
   .global _gpio_set_odr
   .type _gpio_set_odr, %function
 _gpio_set_odr:
-  PUSH_R0_R3
   GPIO_CMP_LDR_PORT 0x41, GPIOA_BB       @ load gpio port A bitband address
   BEQ     __gpio_set_odr
   GPIO_CMP_LDR_PORT 0x42, GPIOB_BB       @ load gpio port B bitband address
@@ -207,7 +189,6 @@ _gpio_set_odr:
   BEQ     __gpio_set_odr
   GPIO_CMP_LDR_PORT 0x48, GPIOH_BB       @ load gpio port H bitband address
   BEQ     __gpio_set_odr
-  POP_R0_R3
   BX      r14                 @ failure return
 __gpio_set_odr:
   @ calculating pin's bit offset
@@ -216,7 +197,6 @@ __gpio_set_odr:
   LDR     r3, =GPIOx_ODR      @ bit-band offset for GPIOx_OTYPERS
   ADD     r1, r1, r3          @ add the bit-offset to reg-offset
   STR     r2, [r0, r1]        @ save the output type
-  POP_R0_R3
   BX      r14
   .size _gpio_set_odr, .-_gpio_set_odr
 
@@ -235,7 +215,6 @@ __gpio_set_odr:
   .global _gpio_set_af
   .type _gpio_set_af, %function
 _gpio_set_af:
-  PUSH_R0_R3
   GPIO_CMP_LDR_PORT 0x41, GPIOA_BB       @ load gpio port A bitband address
   BEQ     __gpio_set_af
   GPIO_CMP_LDR_PORT 0x42, GPIOB_BB       @ load gpio port B bitband address
@@ -248,8 +227,6 @@ _gpio_set_af:
   BEQ     __gpio_set_af
   GPIO_CMP_LDR_PORT 0x48, GPIOH_BB       @ load gpio port H bitband address
   BEQ     __gpio_set_af
-  POP_R0_R3
-  BX      r14                 @ failure return
 __gpio_set_af:
   MOV     r3, #16             @ 4 bytes per bit * 4 bits per pin 
   CMP     r1, #8              @ check if the pin number is configured in GPIOx_AFRL or GPIOx_AFRH
@@ -276,7 +253,6 @@ __gpio_set_af:
   
   LSR     r3, r2, #3          @ mask bit 0 1 2
   STR     r3, [r0, 0x04]      @ save bit 3
-  POP_R0_R3
   BX      r14
   .size _gpio_set_af, .-_gpio_set_af
 
